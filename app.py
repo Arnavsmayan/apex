@@ -38,7 +38,9 @@ class Research:
 
     hooks: PanelHooks
     researchers: int = 0  # how many researchers have started, to number them
-    findings: list[str] = field(default_factory=list)  # what each researcher reported, for the Writer
+    findings: list[str] = field(default_factory=list)
+    race_keys: list[str] = field(default_factory=list)
+    researcher_limit: int = 4
 
 
 # --- Tools ---
@@ -50,51 +52,74 @@ def get_race_data(session_key: str, kind: str, driver: str = "") -> str:
 
     Args:
         session_key: 9558 for 2024 British GP, 9590 for 2024 Italian GP, or 9636 for 2024 Sao Paulo GP.
-        kind: One of sessions, drivers, laps, pit, stints, race_control, results. Results come from Jolpica.
+        kind: sessions, drivers, laps, pit, stints, race_control, position, intervals, weather, or results (Jolpica).
         driver: Driver surname, three-letter abbreviation, or number. Required for laps.
     """
-    if kind == "laps" and not driver:
-        return json.dumps({"error": "Supply one driver when requesting laps."})
+    if kind in {"laps", "position", "intervals"} and not driver:
+        return json.dumps({"error": f"Supply one driver when requesting {kind}."})
     try:
         return json.dumps(race_data.get_data(session_key, kind, driver))
     except (OSError, ValueError) as exc:
         return json.dumps({"error": f"Data unavailable: {exc}"})
 
 
-# --- The researcher: one task, by walking Wikipedia's links ---
+@function_tool
+def compare_lap_pace(session_key: str, driver_a: str, driver_b: str, start_lap: int, end_lap: int) -> str:
+    """Calculate a paired lap pace comparison in a race window.
+
+    Args:
+        session_key: 9558, 9590, or 9636.
+        driver_a: First driver surname, three-letter code, or number, e.g. HAM.
+        driver_b: Second driver surname, three-letter code, or number, e.g. VER.
+        start_lap: First lap to include, e.g. 20.
+        end_lap: Last lap to include, e.g. 25.
+    """
+    try:
+        return json.dumps(race_data.compare_pace(session_key, driver_a, driver_b, start_lap, end_lap))
+    except (OSError, ValueError) as exc:
+        return json.dumps({"error": f"Comparison unavailable: {exc}"})
+
+
+# --- Independent researchers ---
 
 researcher = Agent(
     name="Researcher",
     instructions="""\
-Investigate your assigned F1 question using get_race_data. Use only returned records.
+Investigate your assigned F1 question using get_race_data and compare_lap_pace. Use only tool results.
 Cite each factual finding with the exact source URL provided by the tool and include relevant
 lap numbers and values. Report missing information and do not infer causation or invent gaps.
-When comparing pace, account for pit laps, safety cars, weather, and missing observations.
-Call the tool for each driver you discuss. Report limited evidence when it is inconclusive.""",
+Use compare_lap_pace for relevant windows, including sample size and caveats. Check race control and
+weather where relevant. Investigate rival explanations and identify counter-evidence and unresolved gaps.
+OpenF1 and Jolpica are unofficial, not official sources. Do not assert counterfactual outcomes.""",
     model=RESEARCHER_MODEL,
     model_settings=SETTINGS,
-    tools=[get_race_data],
+    tools=[get_race_data, compare_lap_pace],
 )
+
+
+async def run_research(state: Research, task: str, session_key: str) -> str:
+    if state.researchers >= state.researcher_limit:
+        return "No researchers left. Reply DONE."
+    if session_key not in race_data.RACES:
+        return "Unknown race session. Available keys: 9558, 9590, 9636."
+    state.researchers += 1
+    state.race_keys.append(session_key)
+    agent = researcher.clone(name=f"Researcher {state.researchers}")
+    prompt = f"Task: {task}\nRace session key: {session_key}"
+    result = await Runner.run(agent, prompt, context=state, hooks=state.hooks, max_turns=12)
+    state.findings.append(f"{task}\n\n{result.final_output}")
+    return str(result.final_output)
 
 
 @function_tool
 async def research(ctx: RunContextWrapper[Research], task: str, session_key: str) -> str:
-    """Send an independent researcher to investigate one task in a bundled race.
+    """Send a fresh researcher to investigate a focused task.
 
     Args:
-        task: One specific thing to find out.
+        task: Specific hypothesis, evidence gap, or rival explanation to investigate.
         session_key: Race identifier: 9558, 9590, or 9636.
     """
-    if ctx.context.researchers >= MAX_RESEARCHERS:
-        return "No researchers left. Reply DONE."
-    # What researcher.as_tool() does: run the researcher in a fresh context and return its answer.
-    # Written out so each run gets a numbered copy, and its own column in the context panel.
-    ctx.context.researchers += 1
-    agent = researcher.clone(name=f"Researcher {ctx.context.researchers}")
-    prompt = f"Task: {task}\nRace session key: {session_key}"
-    result = await Runner.run(agent, prompt, context=ctx.context, hooks=ctx.context.hooks, max_turns=12)
-    ctx.context.findings.append(f"{task}\n\n{result.final_output}")
-    return str(result.final_output)
+    return await run_research(ctx.context, task, session_key)
 
 
 # --- The lead: plans, fans out to researchers, and checks for gaps ---
@@ -105,10 +130,22 @@ lead = Agent(
 You lead an F1 research team using bundled snapshots: 2024 British GP (9558), 2024 Italian GP
 (9590), 2024 Sao Paulo GP (9636). If the question lacks a race or is too vague, ask one
 clarifying question. If a requested race is unavailable, explain the available races.
-Otherwise call research in parallel in one turn for 3 independent tasks: pit stops and tires,
-lap pace, and race context and results. Tell each researcher the relevant race and driver names.
-Review findings and call research again for any important gap, at most twice. Then say DONE.
+Otherwise call research in parallel in one turn for 3 independent, question-specific tasks.
+Investigate plausible explanations and rival explanations, including timing, pace, and race context.
+Tell each researcher the relevant race and driver names. Then say DONE; a separate review follows.
 Do not infer that a pit stop caused a result or claim an alternative strategy would win.""",
+    model=MODEL,
+    model_settings=SETTINGS,
+    tools=[research],
+)
+
+reviewer = Agent(
+    name="Lead Review",
+    instructions="""Review the question and initial findings skeptically. Identify the most consequential
+unresolved gap, counter-explanation, conflict, or weak inference. Call research at least once to investigate it,
+passing the correct race key and driver names. Use a second follow-up if necessary and available. If the data
+cannot resolve a point, say so. End with a short synthesis of supported conclusions and uncertainties.
+Never treat association as proof of causation or invent a counterfactual outcome.""",
     model=MODEL,
     model_settings=SETTINGS,
     tools=[research],
@@ -121,8 +158,9 @@ writer = Agent(
     instructions="""\
 Write a short report in markdown that answers the question, using only the findings you're given.
 
-- Start with a one-paragraph answer, then a section per part of the question.
-- Keep the links: end every sentence that states a fact with the link from its finding.
+- Answer directly, explain relevant evidence and competing explanations, and state limitations.
+- Be concise; don't repeat the same numbers in multiple sections.
+- Cite factual claims with markdown links from findings; don't call unofficial sources official.
 - If the findings don't answer part of the question, say so.
 - Write plain, specific sentences. Don't claim more significance than the findings do: no
   "profoundly", "pivotal", "paving the way", or "it is worth noting".""",
@@ -140,9 +178,19 @@ async def deep_research(question: str, hooks: PanelHooks) -> str:
     if not research_run.findings:
         return str(lead_result.final_output)
 
-    # 2. Write: one call, outside the loop. The Writer sees only the question and the findings.
+    research_run.researcher_limit = MAX_RESEARCHERS
+    initial_count = research_run.researchers
+    initial_findings = "\n\n---\n\n".join(research_run.findings)
+    review = await Runner.run(reviewer, f"Question: {question}\n\nInitial findings:\n{initial_findings}",
+                              context=research_run, hooks=hooks, max_turns=8)
+    if research_run.researchers == initial_count and research_run.race_keys:
+        await run_research(research_run,
+            f"For the question {question}, independently test the most important rival explanation or evidence gap. "
+            f"Initial findings: {initial_findings}", research_run.race_keys[0])
+
+    # Write using both the initial and follow-up evidence.
     findings = "\n\n---\n\n".join(research_run.findings)
-    report = await Runner.run(writer, f"Question: {question}\n\nFindings:\n\n{findings}", hooks=hooks)
+    report = await Runner.run(writer, f"Question: {question}\n\nFindings:\n\n{findings}\n\nReview:\n{review.final_output}", hooks=hooks, max_turns=4)
     return str(report.final_output)
 
 
