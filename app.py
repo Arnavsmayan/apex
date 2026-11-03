@@ -10,8 +10,9 @@ from agents.extensions.models.litellm_model import LitellmModel
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, StreamingResponse
+from pydantic import BaseModel
 
-import wikipedia
+import race_data
 from context_panel import AgentContexts, PanelHooks, add_context_panel
 
 # WIKIMEDIA_USERNAME and WIKIMEDIA_PASSWORD come from the .env file next to this one.
@@ -44,19 +45,20 @@ class Research:
 
 
 @function_tool
-def get_article(url: str) -> str:
-    """Get the text of an English Wikipedia article, and the articles it links to.
+def get_race_data(session_key: str, kind: str, driver: str = "") -> str:
+    """Read historical race observations from a bundled OpenF1 snapshot.
 
     Args:
-        url: The article's URL, e.g. 'https://en.wikipedia.org/wiki/Ada_Lovelace'.
+        session_key: 9558 for 2024 British GP, 9590 for 2024 Italian GP, or 9636 for 2024 Sao Paulo GP.
+        kind: One of sessions, drivers, laps, pit, stints, race_control, results. Results come from Jolpica.
+        driver: Driver surname, three-letter abbreviation, or number. Required for laps.
     """
+    if kind == "laps" and not driver:
+        return json.dumps({"error": "Supply one driver when requesting laps."})
     try:
-        article = wikipedia.fetch_article(url)
-    except Exception as e:
-        # The model cannot see an exception. Return something it can reason about.
-        return json.dumps({"error": f"Could not fetch {url}: {type(e).__name__}: {e}"})
-    links = "\n".join(f"- {link['text']}: {link['url']}" for link in article["links"])
-    return f"# {article['title']}\n{article['description']}\nSource: {article['url']}\n\n{article['text']}\n\n## Links\n{links}"
+        return json.dumps(race_data.get_data(session_key, kind, driver))
+    except (OSError, ValueError) as exc:
+        return json.dumps({"error": f"Data unavailable: {exc}"})
 
 
 # --- The researcher: one task, by walking Wikipedia's links ---
@@ -64,30 +66,24 @@ def get_article(url: str) -> str:
 researcher = Agent(
     name="Researcher",
     instructions="""\
-You research one task on English Wikipedia, starting from the article you're given.
-
-1. Read the starting article with get_article.
-2. Walk the links: when an article links to one that's more specific to your task, read that one.
-   If the starting article doesn't answer your task, follow its links before giving up.
-   Read at most 4 articles in all.
-3. Reply with the facts that answer your task and nothing else, at most 8 bullets. End every
-   bullet with a link to the article it came from, e.g.
-   ([Harvard Mark I](https://en.wikipedia.org/wiki/Harvard_Mark_I)).
-   If the articles don't answer part of the task, say so in a last bullet.""",
+Investigate your assigned F1 question using get_race_data. Use only returned records.
+Cite each factual finding with the exact source URL provided by the tool and include relevant
+lap numbers and values. Report missing information and do not infer causation or invent gaps.
+When comparing pace, account for pit laps, safety cars, weather, and missing observations.
+Call the tool for each driver you discuss. Report limited evidence when it is inconclusive.""",
     model=RESEARCHER_MODEL,
     model_settings=SETTINGS,
-    tools=[get_article],
+    tools=[get_race_data],
 )
 
 
 @function_tool
-async def research(ctx: RunContextWrapper[Research], task: str, start_url: str) -> str:
-    """Send a researcher to answer one task by walking Wikipedia from a starting article.
-    Returns its findings, each with the article it came from.
+async def research(ctx: RunContextWrapper[Research], task: str, session_key: str) -> str:
+    """Send an independent researcher to investigate one task in a bundled race.
 
     Args:
         task: One specific thing to find out.
-        start_url: The Wikipedia article to start from: one of the links you've seen.
+        session_key: Race identifier: 9558, 9590, or 9636.
     """
     if ctx.context.researchers >= MAX_RESEARCHERS:
         return "No researchers left. Reply DONE."
@@ -95,7 +91,7 @@ async def research(ctx: RunContextWrapper[Research], task: str, start_url: str) 
     # Written out so each run gets a numbered copy, and its own column in the context panel.
     ctx.context.researchers += 1
     agent = researcher.clone(name=f"Researcher {ctx.context.researchers}")
-    prompt = f"Task: {task}\nStart at: {start_url}"
+    prompt = f"Task: {task}\nRace session key: {session_key}"
     result = await Runner.run(agent, prompt, context=ctx.context, hooks=ctx.context.hooks, max_turns=12)
     ctx.context.findings.append(f"{task}\n\n{result.final_output}")
     return str(result.final_output)
@@ -106,18 +102,16 @@ async def research(ctx: RunContextWrapper[Research], task: str, start_url: str) 
 lead = Agent(
     name="Lead",
     instructions="""\
-You lead a research team. The user gives you a question and a Wikipedia article to start from.
-
-1. Read the starting article with get_article.
-2. Split the question into 2 to 4 independent research tasks. Call research once per task, all in
-   the same turn, so the researchers work in parallel. Give each a starting URL from the
-   article's links: another article, never the starting one.
-3. Read the findings. If part of the question is still unanswered, call research again for just
-   that part. Do this at most twice.
-4. When the question is covered, reply DONE and nothing else: a writer writes the report.""",
+You lead an F1 research team using bundled snapshots: 2024 British GP (9558), 2024 Italian GP
+(9590), 2024 Sao Paulo GP (9636). If the question lacks a race or is too vague, ask one
+clarifying question. If a requested race is unavailable, explain the available races.
+Otherwise call research in parallel in one turn for 3 independent tasks: pit stops and tires,
+lap pace, and race context and results. Tell each researcher the relevant race and driver names.
+Review findings and call research again for any important gap, at most twice. Then say DONE.
+Do not infer that a pit stop caused a result or claim an alternative strategy would win.""",
     model=MODEL,
     model_settings=SETTINGS,
-    tools=[get_article, research],
+    tools=[research],
 )
 
 # --- The writer: one call, after the research ends ---
@@ -141,8 +135,10 @@ async def deep_research(question: str, start_url: str, hooks: PanelHooks) -> str
     research_run = Research(hooks=hooks)
 
     # 1. Research: plan, fan out, check for gaps
-    prompt = f"Question: {question}\nStart at: {start_url}"
-    await Runner.run(lead, prompt, context=research_run, hooks=hooks, max_turns=12)
+    prompt = f"Question: {question}"
+    lead_result = await Runner.run(lead, prompt, context=research_run, hooks=hooks, max_turns=12)
+    if not research_run.findings:
+        return str(lead_result.final_output)
 
     # 2. Write: one call, outside the loop. The Writer sees only the question and the findings.
     findings = "\n\n---\n\n".join(research_run.findings)
@@ -161,6 +157,27 @@ app = FastAPI()
 add_context_panel(app, sessions)
 
 
+class ChatRequest(BaseModel):
+    message: str
+    session_id: str | None = None
+
+
+@app.post("/chat")
+async def chat(body: ChatRequest):
+    """Return the report and the agent tool calls for a research question."""
+    session_id = body.session_id or str(uuid.uuid4())
+    contexts = AgentContexts()
+    sessions[session_id] = contexts
+    hooks = PanelHooks(contexts, lambda event: None)
+    report = await asyncio.wait_for(deep_research(body.message, "", hooks), timeout=270)
+    calls = []
+    for event in contexts.events:
+        message = event.get("message", {})
+        for call in message.get("tool_calls") or []:
+            calls.append({**call, "agent": event.get("agent")})
+    return {"response": report, "session_id": session_id, "tool_calls": calls}
+
+
 @app.get("/")
 def index():
     # no-cache: browsers otherwise keep serving an old page after a redeploy
@@ -177,7 +194,7 @@ async def run(question: str, url: str):
 
     async def work():
         try:
-            report = await deep_research(question, url, hooks)
+            report = await asyncio.wait_for(deep_research(question, url, hooks), timeout=270)
             queue.put_nowait({"type": "done", "markdown": report})
         except Exception as e:
             # Auth, quota, a model that won't stop: show it on the page, not as a dropped stream.
