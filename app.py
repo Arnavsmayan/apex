@@ -24,11 +24,11 @@ set_tracing_disabled(True)
 # LiteLLM routes the call to Gemini. api_key is unused: Vertex AI uses your gcloud credentials.
 MODEL = LitellmModel(model="vertex_ai/gemini-3.8-flash", api_key="unused")
 RESEARCHER_MODEL = MODEL
-# A stalled model call would hang the page: give up after 90 s, and retry twice.
-SETTINGS = ModelSettings(extra_args={"vertex_location": "global", "timeout": 90, "num_retries": 2})
+# The per-call timeout is temporarily omitted for this test; restore it afterward.
+SETTINGS = ModelSettings(extra_args={"vertex_location": "global", "num_retries": 2})
 
 # The Lead gets this many researchers in all. Prompts ask for restraint; code enforces it.
-MAX_RESEARCHERS = 6
+MAX_RESEARCHERS = 4
 
 
 @dataclass
@@ -39,7 +39,7 @@ class Research:
     researchers: int = 0  # how many researchers have started, to number them
     findings: list[str] = field(default_factory=list)
     race_keys: list[str] = field(default_factory=list)
-    researcher_limit: int = 4
+    researcher_limit: int = 3
 
 
 # --- Tools ---
@@ -129,9 +129,10 @@ lead = Agent(
 You lead an F1 research team using bundled snapshots: 2024 British GP (9558), 2024 Italian GP
 (9590), 2024 Sao Paulo GP (9636). If the question lacks a race or is too vague, ask one
 clarifying question. If a requested race is unavailable, explain the available races.
-Otherwise call research in parallel in one turn for 3 independent, question-specific tasks.
+Call research in parallel in one turn for exactly 3 independent, question-specific tasks.
 Investigate plausible explanations and rival explanations, including timing, pace, and race context.
 Tell each researcher the relevant race and driver names. Then say DONE; a separate review follows.
+Do not call research again in this initial phase.
 Do not infer that a pit stop caused a result or claim an alternative strategy would win.""",
     model=MODEL,
     model_settings=SETTINGS,
@@ -142,7 +143,7 @@ reviewer = Agent(
     name="Lead Review",
     instructions="""Review the question and initial findings skeptically. Identify the most consequential
 unresolved gap, counter-explanation, conflict, or weak inference. Call research at least once to investigate it,
-passing the correct race key and driver names. Use a second follow-up if necessary and available. If the data
+passing the correct race key and driver names. Only one follow-up is available. If the data
 cannot resolve a point, say so. End with a short synthesis of supported conclusions and uncertainties.
 Do not merely repeat a lookup already completed. Investigate whether evidence supports a causal claim, or
 look for relevant race context and competing explanations. Never infer a specific cause from timing alone.""",
@@ -234,7 +235,7 @@ async def chat(body: ChatRequest):
     contexts = AgentContexts()
     sessions[session_id] = contexts
     hooks = PanelHooks(contexts, lambda event: None)
-    report = await asyncio.wait_for(deep_research(body.message, hooks), timeout=270)
+    report = await deep_research(body.message, hooks)
     calls = []
     for event in contexts.events:
         message = event.get("message", {})
@@ -259,7 +260,7 @@ async def run(question: str):
 
     async def work():
         try:
-            report = await asyncio.wait_for(deep_research(question, hooks), timeout=270)
+            report = await deep_research(question, hooks)
             queue.put_nowait({"type": "done", "markdown": report})
         except Exception as e:
             # Auth, quota, a model that won't stop: show it on the page, not as a dropped stream.
