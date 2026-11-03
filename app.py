@@ -24,8 +24,8 @@ set_tracing_disabled(True)
 # LiteLLM routes the call to Gemini. api_key is unused: Vertex AI uses your gcloud credentials.
 MODEL = LitellmModel(model="vertex_ai/gemini-3.8-flash", api_key="unused")
 RESEARCHER_MODEL = MODEL
-# The per-call timeout is temporarily omitted for this test; restore it afterward.
-SETTINGS = ModelSettings(extra_args={"vertex_location": "global", "num_retries": 2})
+# Bound model calls and retries to avoid stalled requests.
+SETTINGS = ModelSettings(extra_args={"vertex_location": "global", "timeout": 90, "num_retries": 2})
 
 # The Lead gets this many researchers in all. Prompts ask for restraint; code enforces it.
 MAX_RESEARCHERS = 4
@@ -235,7 +235,7 @@ async def chat(body: ChatRequest):
     contexts = AgentContexts()
     sessions[session_id] = contexts
     hooks = PanelHooks(contexts, lambda event: None)
-    report = await deep_research(body.message, hooks)
+    report = await asyncio.wait_for(deep_research(body.message, hooks), timeout=270)
     calls = []
     for event in contexts.events:
         message = event.get("message", {})
@@ -260,7 +260,7 @@ async def run(question: str):
 
     async def work():
         try:
-            report = await deep_research(question, hooks)
+            report = await asyncio.wait_for(deep_research(question, hooks), timeout=270)
             queue.put_nowait({"type": "done", "markdown": report})
         except Exception as e:
             # Auth, quota, a model that won't stop: show it on the page, not as a dropped stream.
