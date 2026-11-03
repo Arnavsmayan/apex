@@ -1,0 +1,17 @@
+{
+ "9558": [
+  {"publisher":"FIA", "type":"official classification", "url":"https://www.fia.com/events/fia-formula-one-world-championship/season-2024/british-grand-prix/race-classification", "finding":"The FIA classification lists Hamilton first, Verstappen second and Norris third."},
+  {"publisher":"Formula 1", "type":"race report", "url":"https://www.formula1.com/en/latest/article/hamilton-beats-verstappen-to-first-win-since-2021-with-record-breaking-9th.3teU9bznaWJlC2TGAYh0Vl.3teU9bznaWJlC2TGAYh0Vl", "finding":"The official race report describes Hamilton's victory in a race affected by changing weather."},
+  {"publisher":"Mercedes", "type":"team race report", "url":"https://www.mercedesamgf1.com/reports/lewis-wins-a-thrilling-british-gp-in-silverstone", "finding":"Mercedes describes watching the weather radar and reports Hamilton rejoining behind Norris and ahead of Verstappen at the intermediate-tyre stop."}
+ ],
+ "9590": [
+  {"publisher":"FIA", "type":"provisional official classification", "url":"https://www.fia.com/sites/default/files/decision-document/2024%20Italian%20Grand%20Prix%20-%20Provisional%20Race%20Classification.pdf", "finding":"The FIA provisional classification lists Leclerc first, Piastri second and Norris third."},
+  {"publisher":"Formula 1", "type":"race report", "url":"https://www.formula1.com/en/latest/article/leclerc-thrills-the-tifosi-to-triumph-at-monza-ahead-of-piastri-and-norris.1aiYZF3rWZp2Q9yQtcuvqV", "finding":"The F1 race report describes Leclerc winning on a one-stop strategy, ahead of Piastri and Norris."},
+  {"publisher":"McLaren", "type":"team race report", "url":"https://www.mclaren.com/racing/formula-1/2024/italian-grand-prix/2024-italian-grand-prix-race-report/", "finding":"McLaren reports that Norris pitted on laps 14 and 32 and Piastri on laps 16 and 38. The team said it chose two stops because of tyre concerns; this is the team's explanation."}
+ ],
+ "9636": [
+  {"publisher":"FIA", "type":"official classification", "url":"https://www.fia.com/events/fia-formula-one-world-championship/season-2024/sao-paulo-grand-prix/race-classification", "finding":"The FIA classification lists Verstappen first, Ocon second and Gasly third."},
+  {"publisher":"FIA", "type":"race report", "url":"https://www.fia.com/news/f1-vestappen-takes-stunning-sao-paulo-win-p17-grid-alpine-score-double-podium", "finding":"The FIA report describes Verstappen winning from 17th on the grid and a race affected by rain and a red flag."},
+  {"publisher":"Formula 1", "type":"race report", "url":"https://www.formula1.com/en/latest/article/verstappen-wins-chaotic-sao-paulo-grand-prix-after-stunning-recovery-from.1DIc8pzRmGbC3jHJmvtBi1", "finding":"The official F1 report describes changing weather and Verstappen's recovery to win from 17th."}
+ ]
+}
