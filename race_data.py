@@ -20,7 +20,14 @@ def get_evidence(session_key: str, drivers: list[str], kinds: list[str]) -> dict
     evidence = {}
     for kind in dict.fromkeys(kinds):
         if kind in {"weather", "race_control", "results"}:
-            evidence[kind] = get_data(session_key, kind)
+            result = get_data(session_key, kind)
+            if kind == "results" and result.get("records"):
+                race = result["records"][0]
+                fields = ("position", "grid", "status", "points", "Driver", "Time")
+                result["records"] = [{key: row.get(key) for key in fields if row.get(key) is not None}
+                                     for row in race.get("Results", [])]
+                result["note"] = "Selected result fields for all drivers; consult the source for the full classification."
+            evidence[kind] = result
             continue
         evidence[kind] = {}
         for driver in dict.fromkeys(drivers):
@@ -52,7 +59,45 @@ def get_data(session_key: str, kind: str, driver: str = "") -> dict:
         number = matches[0]["driver_number"]
         rows = [row for row in rows if row.get("driver_number") == number]
     filtered = driver if kind in {"drivers", "laps", "pit", "stints", "position", "intervals"} else None
-    return {"race": RACES[key], "source": f"https://api.openf1.org/v1/{kind}?session_key={key}", "driver_filter": filtered, "count": len(rows), "records": rows}
+    total = len(rows)
+    note = ""
+    if kind == "position":
+        # Preserve every position change per driver, rather than repeated identical readings.
+        previous = {}
+        changes = []
+        for row in rows:
+            number = row.get("driver_number")
+            if number not in previous or previous[number] != row.get("position"):
+                changes.append(row)
+                previous[number] = row.get("position")
+        rows = changes
+        note = "Only the first position reading and subsequent position changes for each driver are shown. Timestamps reflect observations, not the exact instant of an overtake."
+    elif kind == "weather" and rows:
+        # Keep rainfall transitions and periodic points; do not suggest it is the full record.
+        selected = []
+        last_time = None
+        previous_rain = object()
+        for row in rows:
+            current = datetime.fromisoformat(row["date"])
+            rain = row.get("rainfall")
+            if last_time is None or (current - last_time).total_seconds() >= 300 or rain != previous_rain:
+                selected.append(row)
+                last_time = current
+            previous_rain = rain
+        if selected[-1] != rows[-1]:
+            selected.append(rows[-1])
+        rows = selected
+        note = "Sampled approximately every five minutes plus each observed rainfall change and final reading; other readings omitted. Rainfall is an observation at the sensor, not a complete track condition."
+    if kind == "race_control":
+        fields = ("date", "driver_number", "lap_number", "category", "flag", "scope", "sector", "message")
+        rows = [{k: row[k] for k in fields if row.get(k) is not None} for row in rows]
+    if kind == "weather":
+        fields = ("date", "air_temperature", "track_temperature", "rainfall", "humidity", "wind_speed")
+        rows = [{k: row[k] for k in fields if row.get(k) is not None} for row in rows]
+    result = {"race": RACES[key], "source": f"https://api.openf1.org/v1/{kind}?session_key={key}", "driver_filter": filtered, "count": len(rows), "records": rows}
+    if note:
+        result.update({"original_count": total, "note": note})
+    return result
 
 
 def get_interval_window(session_key: str, driver: str, start_lap: int, end_lap: int) -> dict:

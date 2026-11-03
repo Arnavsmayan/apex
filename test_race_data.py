@@ -29,6 +29,16 @@ class RaceDataTests(unittest.TestCase):
         self.assertIn("error", race_data.compare_pace("9999", "HAM", "VER", 1, 5))
         self.assertIn("error", race_data.compare_pace("9558", "HAM", "VER", 5, 1))
 
+    def test_weather_summary_preserves_rainfall_transitions(self):
+        import json
+        raw = json.loads((race_data.DATA / "9558_weather.json").read_text(encoding="utf-8-sig"))
+        sampled = race_data.get_data("9558", "weather")
+        dates = {row["date"] for row in sampled["records"]}
+        transitions = {raw[i]["date"] for i in range(1, len(raw)) if raw[i].get("rainfall") != raw[i-1].get("rainfall")}
+        self.assertTrue(transitions <= dates)
+        self.assertLess(sampled["count"], sampled["original_count"])
+        self.assertIn("Sampled", sampled["note"])
+
     def test_new_sources_exist_for_each_race(self):
         for key in race_data.RACES:
             for kind in ("position", "intervals", "weather"):
