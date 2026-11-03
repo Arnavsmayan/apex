@@ -12,8 +12,37 @@
             }
             body {
                 font-family: system-ui, sans-serif;
-                padding: 2rem;
-                color: #111;
+                padding: 0 2rem 3rem;
+                color: #19191e;
+                background: #f7f7f7;
+            }
+            .topbar {
+                max-width: 760px;
+                margin: 0 auto 3rem;
+                padding: 1.5rem 0;
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                border-bottom: 1px solid #dedee2;
+            }
+            .f1-logo {
+                width: 70px;
+                height: auto;
+                flex: none;
+            }
+            .brand {
+                padding-left: 1rem;
+                border-left: 1px solid #cccdd2;
+            }
+            .brand-name {
+                font-size: 1.2rem;
+                font-weight: 800;
+                letter-spacing: -0.04em;
+            }
+            .tagline {
+                color: #66666f;
+                font-size: 0.76rem;
+                margin-top: 0.15rem;
             }
             main {
                 max-width: 760px;
@@ -23,12 +52,27 @@
                 gap: 1.5rem;
             }
             section {
-                border: 1px solid #e0e0e0;
+                border: 1px solid #e4e4e8;
+                border-radius: 4px;
+                background: #fff;
                 padding: 1.25rem 1.5rem;
             }
             h1 {
-                font-size: 1rem;
-                font-weight: 600;
+                font-size: clamp(1.6rem, 4vw, 2.1rem);
+                letter-spacing: -0.04em;
+                font-weight: 750;
+            }
+            .intro {
+                display: grid;
+                gap: 0.55rem;
+            }
+            .intro p {
+                color: #62626c;
+                line-height: 1.55;
+                font-size: 0.9rem;
+            }
+            .coverage {
+                font-size: 0.78rem !important;
             }
             h2 {
                 font-size: 0.75rem;
@@ -50,7 +94,7 @@
                 outline: none;
             }
             #question:focus {
-                border-bottom-color: #000;
+                border-bottom-color: #e10600;
             }
             #task label {
                 display: block;
@@ -65,7 +109,7 @@
             }
             button {
                 padding: 0.75rem 1.5rem;
-                background: #000;
+                background: #e10600;
                 color: #fff;
                 border: none;
                 font-size: 0.75rem;
@@ -75,6 +119,13 @@
             }
             button:disabled {
                 opacity: 0.3;
+            }
+            button:not(:disabled):hover {
+                background: #bd0500;
+            }
+            button:focus-visible, #question:focus-visible {
+                outline: 2px solid #e10600;
+                outline-offset: 3px;
             }
             #activity {
                 list-style: none;
@@ -102,13 +153,30 @@
             .empty {
                 color: #999;
             }
+            @media (max-width: 520px) {
+                body { padding: 0 1rem 2rem; }
+                .topbar { margin-bottom: 2rem; }
+                section { padding: 1rem; }
+            }
         </style>
     </head>
     <body>
+        <header class="topbar">
+            <!-- F1 logo from https://commons.wikimedia.org/wiki/File:F1.svg -->
+            <svg class="f1-logo" viewBox="0 0 120 30" role="img" aria-label="F1">
+                <path fill="#ee0000" d="M101.086812,30 L101.711812,30 L101.711812,27.106875 L101.722437,27.106875 L102.761812,30 L103.302437,30 L104.341812,27.106875 L104.352437,27.106875 L104.352437,30 L104.977437,30 L104.977437,26.25125 L104.063687,26.25125 L103.055562,29.18625 L103.044937,29.18625 L102.011187,26.25125 L101.086812,26.25125 L101.086812,30 Z M97.6274375,26.818125 L98.8136875,26.818125 L98.8136875,30 L99.4699375,30 L99.4699375,26.818125 L100.661812,26.818125 L100.661812,26.25125 L97.6274375,26.25125 L97.6274375,26.818125 Z M89.9999375,30 L119.999937,0 L101.943687,0 L71.9443125,30 L89.9999375,30 Z M85.6986875,13.065 L49.3818125,13.065 C38.3136875,13.065 36.3768125,13.651875 31.6361875,18.3925 C27.2024375,22.82625 20.0005625,30 20.0005625,30 L35.7324375,30 L39.4855625,26.246875 C41.9530625,23.779375 43.2255625,23.52375 48.4068125,23.52375 L75.2405625,23.52375 L85.6986875,13.065 Z M31.1518125,16.253125 C27.8774375,19.3425 20.7530625,26.263125 16.9130625,30 L-6.25e-05,30 C-6.25e-05,30 13.5524375,16.486875 21.0849375,9.0725 C28.8455625,1.685 32.7143125,0 46.9486875,0 L98.7643125,0 L87.5449375,11.21875 L48.0011875,11.21875 C37.9993125,11.21875 35.7518125,11.911875 31.1518125,16.253125 Z" />
+            </svg>
+            <div class="brand">
+                <div class="brand-name">Apex</div>
+                <div class="tagline">The story behind every F1 race.</div>
+            </div>
+        </header>
         <main>
-            <h1>Apex</h1>
-            <p>The story behind every F1 race. Ask how pit stops, tire choices, and race events shaped a battle on track.</p>
-            <p>Currently available: the 2024 British, Italian, and São Paulo Grands Prix.</p>
+            <div class="intro">
+                <h1>Explore the race behind the result.</h1>
+                <p>Ask how pit stops, tire choices, and race events shaped a battle on track.</p>
+                <p class="coverage">Currently available: the 2024 British, Italian, and São Paulo Grands Prix.</p>
+            </div>
 
             <section>
                 <h2>Task</h2>
