@@ -9,6 +9,28 @@ KINDS = {"sessions", "drivers", "laps", "pit", "stints", "race_control", "positi
 ROUNDS = {"9558": "12", "9590": "16", "9636": "21"}
 
 
+def get_evidence(session_key: str, drivers: list[str], kinds: list[str]) -> dict:
+    """Gather requested race evidence in one call while keeping each source identifiable."""
+    if not drivers or len(drivers) > 3:
+        return {"error": "Provide one to three drivers."}
+    allowed = {"pit", "stints", "laps", "position", "weather", "race_control", "results"}
+    if not kinds or len(kinds) > 7 or any(kind not in allowed for kind in kinds):
+        return {"error": "Choose from pit, stints, laps, position, weather, race_control, results."}
+    evidence = {}
+    for kind in dict.fromkeys(kinds):
+        if kind in {"weather", "race_control", "results"}:
+            evidence[kind] = get_data(session_key, kind)
+            continue
+        evidence[kind] = {}
+        for driver in dict.fromkeys(drivers):
+            result = get_data(session_key, kind, driver)
+            if kind == "laps" and "records" in result:
+                fields = ("driver_number", "lap_number", "date_start", "lap_duration", "is_pit_out_lap")
+                result["records"] = [{key: row.get(key) for key in fields} for row in result["records"]]
+            evidence[kind][driver] = result
+    return {"race": RACES.get(str(session_key)), "evidence": evidence}
+
+
 def get_data(session_key: str, kind: str, driver: str = "") -> dict:
     key = str(session_key)
     if key not in RACES or kind not in KINDS | {"results"}:

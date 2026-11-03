@@ -4,6 +4,12 @@ import race_data
 
 
 class RaceDataTests(unittest.TestCase):
+    def test_batch_returns_distinct_drivers_and_sources(self):
+        result = race_data.get_evidence("9558", ["HAM", "VER"], ["pit", "stints", "weather"])
+        self.assertEqual(result["evidence"]["pit"]["HAM"]["records"][0]["lap_number"], 27)
+        self.assertEqual(result["evidence"]["pit"]["VER"]["records"][0]["lap_number"], 26)
+        self.assertIn("weather?session_key=9558", result["evidence"]["weather"]["source"])
+
     def test_pace_uses_common_laps_and_excludes_pit_and_out_laps(self):
         result = race_data.compare_pace("9558", "HAM", "VER", 20, 32)
         self.assertEqual(result["paired_laps"], [20, 21, 22, 23, 24, 25, 29, 30, 31, 32])

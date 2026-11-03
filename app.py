@@ -46,6 +46,21 @@ class Research:
 
 
 @function_tool
+def get_race_evidence(session_key: str, drivers: list[str], kinds: list[str]) -> str:
+    """Get several kinds of race evidence for up to three drivers in one call.
+
+    Args:
+        session_key: 9558 for 2024 British GP, 9590 for 2024 Italian GP, or 9636 for 2024 Sao Paulo GP.
+        drivers: One to three surnames, three-letter codes, or numbers, e.g. ["HAM", "VER"].
+        kinds: Relevant evidence types: pit, stints, laps, position, weather, race_control, or results.
+    """
+    try:
+        return json.dumps(race_data.get_evidence(session_key, drivers, kinds), separators=(",", ":"))
+    except (OSError, ValueError) as exc:
+        return json.dumps({"error": f"Data unavailable: {exc}"})
+
+
+@function_tool
 def get_race_data(session_key: str, kind: str, driver: str = "") -> str:
     """Read historical race observations from a bundled OpenF1 snapshot.
 
@@ -84,7 +99,10 @@ def compare_lap_pace(session_key: str, driver_a: str, driver_b: str, start_lap: 
 researcher = Agent(
     name="Researcher",
     instructions="""\
-Investigate your assigned F1 question using get_race_data and compare_lap_pace. Use only tool results.
+Investigate your assigned F1 question using tools. Use only tool results.
+First call get_race_evidence once with all relevant drivers and data types for your task.
+Make only essential additional calls; do not request the same data twice. Batch independent tool calls
+in one turn. Complete your research promptly and report gaps instead of repeatedly searching.
 Cite each factual finding with the exact source URL provided by the tool and include relevant
 lap numbers and values. Report missing information and do not infer causation or invent gaps.
 Use compare_lap_pace for relevant windows, including sample size and caveats. Check race control and
@@ -92,7 +110,7 @@ weather where relevant. Investigate rival explanations and identify counter-evid
 OpenF1 and Jolpica are unofficial, not official sources. Do not assert counterfactual outcomes.""",
     model=RESEARCHER_MODEL,
     model_settings=SETTINGS,
-    tools=[get_race_data, compare_lap_pace],
+    tools=[get_race_evidence, get_race_data, compare_lap_pace],
 )
 
 
