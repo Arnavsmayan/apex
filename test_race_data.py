@@ -4,6 +4,14 @@ import race_data
 
 
 class RaceDataTests(unittest.TestCase):
+    def test_intervals_are_limited_to_requested_lap_window(self):
+        result = race_data.get_interval_window("9558", "VER", 25, 26)
+        self.assertEqual(result["lap_window"], [25, 26])
+        self.assertGreater(result["count"], 0)
+        self.assertLess(result["count"], race_data.get_data("9558", "intervals", "VER")["count"])
+        self.assertIn("car ahead", result["note"])
+        self.assertIn("error", race_data.get_interval_window("9558", "VER", 1, 20))
+
     def test_batch_returns_distinct_drivers_and_sources(self):
         result = race_data.get_evidence("9558", ["HAM", "VER"], ["pit", "stints", "weather"])
         self.assertEqual(result["evidence"]["pit"]["HAM"]["records"][0]["lap_number"], 27)

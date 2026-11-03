@@ -61,17 +61,21 @@ def get_race_evidence(session_key: str, drivers: list[str], kinds: list[str]) ->
 
 
 @function_tool
-def get_race_data(session_key: str, kind: str, driver: str = "") -> str:
+def get_race_data(session_key: str, kind: str, driver: str = "", start_lap: int = 0, end_lap: int = 0) -> str:
     """Read historical race observations from a bundled OpenF1 snapshot.
 
     Args:
         session_key: 9558 for 2024 British GP, 9590 for 2024 Italian GP, or 9636 for 2024 Sao Paulo GP.
         kind: sessions, drivers, laps, pit, stints, race_control, position, intervals, weather, or results (Jolpica).
         driver: Driver surname, three-letter abbreviation, or number. Required for laps.
+        start_lap: For intervals, first lap of a short window, e.g. 25. Required for intervals.
+        end_lap: For intervals, last lap of a window of at most eight laps, e.g. 29. Required for intervals.
     """
     if kind in {"laps", "position", "intervals"} and not driver:
         return json.dumps({"error": f"Supply one driver when requesting {kind}."})
     try:
+        if kind == "intervals":
+            return json.dumps(race_data.get_interval_window(session_key, driver, start_lap, end_lap), separators=(",", ":"))
         return json.dumps(race_data.get_data(session_key, kind, driver))
     except (OSError, ValueError) as exc:
         return json.dumps({"error": f"Data unavailable: {exc}"})

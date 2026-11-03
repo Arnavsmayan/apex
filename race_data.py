@@ -1,6 +1,7 @@
 """Read the bundled OpenF1 race snapshots."""
 import json
 import statistics
+from datetime import datetime, timedelta
 from pathlib import Path
 
 DATA = Path(__file__).parent / "data" / "openf1"
@@ -52,6 +53,32 @@ def get_data(session_key: str, kind: str, driver: str = "") -> dict:
         rows = [row for row in rows if row.get("driver_number") == number]
     filtered = driver if kind in {"drivers", "laps", "pit", "stints", "position", "intervals"} else None
     return {"race": RACES[key], "source": f"https://api.openf1.org/v1/{kind}?session_key={key}", "driver_filter": filtered, "count": len(rows), "records": rows}
+
+
+def get_interval_window(session_key: str, driver: str, start_lap: int, end_lap: int) -> dict:
+    """Return interval records within a short window, using this driver's lap timestamps."""
+    if start_lap < 1 or end_lap < start_lap or end_lap - start_lap > 7:
+        return {"error": "For intervals, specify a window of one to eight laps."}
+    laps = get_data(session_key, "laps", driver)
+    intervals = get_data(session_key, "intervals", driver)
+    if "error" in laps or "error" in intervals:
+        return {"error": "Race or driver not found."}
+    by_lap = {r.get("lap_number"): r for r in laps["records"]}
+    first, last = by_lap.get(start_lap), by_lap.get(end_lap)
+    if not first or not last or not first.get("date_start") or not last.get("date_start"):
+        return {"error": "Lap timestamps are unavailable for the requested window."}
+    start = datetime.fromisoformat(first["date_start"])
+    next_lap = by_lap.get(end_lap + 1, {})
+    if next_lap.get("date_start"):
+        end = datetime.fromisoformat(next_lap["date_start"])
+    elif isinstance(last.get("lap_duration"), (int, float)):
+        end = datetime.fromisoformat(last["date_start"]) + timedelta(seconds=last["lap_duration"])
+    else:
+        return {"error": "The end time is unavailable for the requested window."}
+    records = [r for r in intervals["records"] if start <= datetime.fromisoformat(r["date"]) < end]
+    return {**intervals, "lap_window": [start_lap, end_lap], "time_window_utc": [start.isoformat(), end.isoformat()],
+            "count": len(records), "records": records,
+            "note": "Intervals are to the car ahead, not necessarily the other named driver; timestamps use this driver's lap boundaries."}
 
 
 def compare_pace(session_key: str, driver_a: str, driver_b: str, start_lap: int, end_lap: int) -> dict:
