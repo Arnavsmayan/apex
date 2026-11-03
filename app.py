@@ -131,7 +131,7 @@ Write a short report in markdown that answers the question, using only the findi
 )
 
 
-async def deep_research(question: str, start_url: str, hooks: PanelHooks) -> str:
+async def deep_research(question: str, hooks: PanelHooks) -> str:
     research_run = Research(hooks=hooks)
 
     # 1. Research: plan, fan out, check for gaps
@@ -169,7 +169,7 @@ async def chat(body: ChatRequest):
     contexts = AgentContexts()
     sessions[session_id] = contexts
     hooks = PanelHooks(contexts, lambda event: None)
-    report = await asyncio.wait_for(deep_research(body.message, "", hooks), timeout=270)
+    report = await asyncio.wait_for(deep_research(body.message, hooks), timeout=270)
     calls = []
     for event in contexts.events:
         message = event.get("message", {})
@@ -185,7 +185,7 @@ def index():
 
 
 @app.get("/run")
-async def run(question: str, url: str):
+async def run(question: str):
     """Research one question and stream what happens as Server-Sent Events."""
     run_id = str(uuid.uuid4())
     sessions[run_id] = AgentContexts()
@@ -194,7 +194,7 @@ async def run(question: str, url: str):
 
     async def work():
         try:
-            report = await asyncio.wait_for(deep_research(question, url, hooks), timeout=270)
+            report = await asyncio.wait_for(deep_research(question, hooks), timeout=270)
             queue.put_nowait({"type": "done", "markdown": report})
         except Exception as e:
             # Auth, quota, a model that won't stop: show it on the page, not as a dropped stream.
