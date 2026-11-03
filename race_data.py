@@ -55,7 +55,6 @@ def compare_pace(session_key: str, driver_a: str, driver_b: str, start_lap: int,
     differences = [series[0][lap] - series[1][lap] for lap in common]
     return {"race": RACES[str(session_key)], "drivers": [driver_a, driver_b], "lap_range": [start_lap, end_lap],
             "paired_laps": common, "sample_size": len(common),
-            "median_seconds": {driver_a: round(statistics.median(series[0][x] for x in common), 3), driver_b: round(statistics.median(series[1][x] for x in common), 3)},
             "median_paired_difference_seconds_a_minus_b": round(statistics.median(differences), 3),
-            "method": "Same numbered laps; pit and following out laps excluded for both drivers. Negative difference means driver A was faster. Safety cars, traffic, weather, fuel, and other effects are not automatically removed.",
+            "method": "Median of per-lap differences, not a difference between driver medians. Same numbered laps; pit and following out laps excluded for both drivers. Negative difference means driver A was faster. The selected range may span multiple tire compounds. Safety cars, traffic, weather, fuel, and other effects are not automatically removed.",
             "sources": [f"https://api.openf1.org/v1/laps?session_key={session_key}", f"https://api.openf1.org/v1/pit?session_key={session_key}"]}
