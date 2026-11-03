@@ -22,9 +22,8 @@ load_dotenv(Path(__file__).parent / ".env")
 set_tracing_disabled(True)
 
 # LiteLLM routes the call to Gemini. api_key is unused: Vertex AI uses your gcloud credentials.
-MODEL = LitellmModel(model="vertex_ai/gemini-3.5-flash", api_key="unused")
-# Researchers only read and take notes: the cheaper model is enough.
-RESEARCHER_MODEL = LitellmModel(model="vertex_ai/gemini-3.5-flash-lite", api_key="unused")
+MODEL = LitellmModel(model="vertex_ai/gemini-3.8-flash", api_key="unused")
+RESEARCHER_MODEL = MODEL
 # A stalled model call would hang the page: give up after 90 s, and retry twice.
 SETTINGS = ModelSettings(extra_args={"vertex_location": "global", "timeout": 90, "num_retries": 2})
 
