@@ -254,7 +254,11 @@ async def run(question: str):
         try:
             yield f"data: {json.dumps({'type': 'start', 'run_id': run_id})}\n\n"
             while True:
-                event = await queue.get()
+                try:
+                    event = await asyncio.wait_for(queue.get(), timeout=10)
+                except asyncio.TimeoutError:
+                    yield ": keepalive\n\n"
+                    continue
                 yield f"data: {json.dumps(event, default=str)}\n\n"
                 if event["type"] in ("done", "error"):
                     break
