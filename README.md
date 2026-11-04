@@ -237,7 +237,7 @@ The duel was decided by bravery on the pit wall and perfection in the cockpit:
 | --- | --- |
 | “At the Spanish Grand Prix … he executed a **Soft–Medium–Soft** strategy.” Apex compared several races and weather conditions. | “**Spain (Soft–Medium–Hard)**,” followed by an explanation of an early undercut. |
 
-The OpenF1 stint records support the compounds in the Apex excerpt and disagree with the baseline’s final compound. The full Apex season report also makes broader claims that cannot all be established from its filtered season overview; its single Jolpica results link does not itself document tyre compounds. The [captured answers](COMPARISONS.md) preserve both responses without presenting them as verified ground truth.
+The OpenF1 stint records support the compounds in the Apex excerpt and disagree with the baseline’s final compound. The full Apex season report also makes broader claims that cannot all be established from its filtered season overview; its single Jolpica results link does not itself document tyre compounds. The full responses below are captured outputs, not verified ground truth.
 
 <details>
 <summary>Full Apex answer</summary>
