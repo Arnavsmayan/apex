@@ -34,8 +34,6 @@ Apex uses preloaded FastF1 lap data and Jolpica snapshots, and fetches additiona
 
 ## Grader questions and model comparisons
 
-These are the same examples available in the app. The **expected answers** below identify specific facts to look for. The side-by-side columns are excerpts from actual runs on **November 3, 2026**; [full captured outputs](COMPARISONS.md) are included. The baseline used the same `gemini-3.8-flash` model in separate Vertex AI Studio conversations, with an empty system-instructions field and Google grounding, function calling, code execution, and URL context disabled. These are individual outputs, not an accuracy benchmark, and may contain errors.
-
 ### 1. How did Hamilton and Verstappen’s pit stops compare at the 2024 British Grand Prix?
 
 **Expected:** Verstappen pitted on laps **26 and 38**; Hamilton pitted on laps **27 and 38**. Both moved from medium tyres to intermediates, then Hamilton finished on softs and Verstappen on hards. OpenF1 records pit-lane time rather than the stationary wheel-change time for these stops.
