@@ -25,9 +25,7 @@ contextStyle.textContent = `
     #context-panel::before {
         content: "PIT WALL  /  RESEARCH FEED";
         display: block;
-        position: sticky;
-        top: 0;
-        z-index: 3;
+        position: relative;
         margin: -1.5rem -1.5rem 1rem;
         padding: 1.5rem;
         border-bottom: 1px solid #e4e4e8;
@@ -58,11 +56,11 @@ contextStyle.textContent = `
     /* Columns share the width, down to 16rem each; only then does the panel scroll sideways */
     .ctx-grid { display: grid; grid-template-columns: repeat(var(--ctx-cols, 1), minmax(16rem, 1fr)); column-gap: 1rem; }
     .ctx-head {
-        position: sticky; top: 4.1rem; z-index: 1;
+        position: sticky; top: 0; z-index: 2;
         background: #f7f7f7;
         padding: 1rem 0.65rem 0.65rem;
         border-top: 2px solid #dedee2;
-        margin-bottom: 0.65rem;
+        margin-bottom: 0;
         color: #4c4c56;
         font-weight: 750;
         letter-spacing: 0.05em;
