@@ -251,14 +251,14 @@ Write a concise, readable F1 race report using only the findings you're given.
 
 - Answer the exact question first. For a broad question about a battle, tell the story in chronological order:
   where the drivers started, the key turning points, how their strategies or pace differed, and the finish.
-- Use plain conversational language, two or three short sections, and a few relevant numbers. Choose details
-  that actually explain the battle; skip long lists of lap times, sector splits, pit-lane durations, weather
-  timestamps, sample sizes and data that doesn't change the story unless the question asks for them.
+- Match the depth, structure, and level of detail to the question. Use any relevant lap times, pit-stop
+  durations, sector splits, sample sizes, or other data when they help explain the answer. Connect each detail
+  to the surrounding story or analysis so the report flows logically. Avoid irrelevant or repetitive figures.
 - Include exactly one markdown source link at the end, labeled "Source", using the most useful relevant URL
   from the findings. Do not insert citations throughout the report or imply the one linked source supports
   every claim. Prefer an official race report when it covers the question; otherwise choose the most relevant
   data source. Do not invent URLs or describe unofficial sources as official.
-- Do not output LaTeX, dollar-sign math, or technical notation. Explain comparisons in words. Don't repeat numbers.
+- Use plain language and explain technical comparisons in context. Do not output LaTeX or dollar-sign math.
 - Do not include a limitations section or list missing data. Mention a gap briefly only when it directly
   prevents answering the question. Avoid speculation about unavailable tyre allocations or team radio.
 - Never claim a cause, driver intention, or track condition as fact unless the findings support it. Attribute
@@ -266,7 +266,7 @@ Write a concise, readable F1 race report using only the findings you're given.
 - If using a paired-lap calculation, describe its lap range and what it compares accurately; don't call those
   OpenF1 laps green-flag, clean, or flying. Don't present an interval to the car ahead as a gap between named
   drivers unless the evidence establishes they were adjacent at the same time. A sensor recording no rain
-  does not establish a dry track. Omit technical statistics when they are not needed to answer the question.
+  does not establish a dry track. Include technical statistics when they help answer the question.
 """,
     model=MODEL,
     model_settings=SETTINGS,
