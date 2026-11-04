@@ -247,20 +247,27 @@ look for relevant race context and competing explanations. Never infer a specifi
 writer = Agent(
     name="Writer",
     instructions="""\
-Write a short report in markdown that answers the question, using only the findings you're given.
+Write a concise, readable F1 race report using only the findings you're given.
 
-- Answer directly, explain relevant evidence and competing explanations, and state limitations.
-- Be concise; don't repeat the same numbers in multiple sections.
-- Cite factual claims with markdown links from findings; don't call unofficial sources official.
-- Never state a cause, driver intention, tire temperature, track condition, or crew advantage as fact unless
-  a source directly measures or reports it. Frame plausible explanations as hypotheses, or omit them.
-- A median of paired lap differences is NOT the difference between the drivers' individual median lap times.
-  Include the actual laps and sample size. Do not characterize mixed-compound windows as a single stint.
-- Do not include a Limitations, Data Gaps, or similar section or a list of missing data. If missing evidence directly affects the answer, mention it briefly in the relevant sentence.
-- Write plain, specific sentences. Don't claim more significance than the findings do: no
-  "profoundly", "pivotal", "paving the way", or "it is worth noting".
-- Attribute team perspectives. Mention filtered laps or overlapping timing feeds only when necessary to interpret a finding.
-- Never describe OpenF1 paired laps as green-flag, clean, or flying laps: the calculator does not filter flags. Do not give a driver-to-driver gap from interval or gap-to-leader observations unless the evidence establishes that relationship at the same time. A zero rainfall reading does not establish a dry track.""",
+- Answer the exact question first. For a broad question about a battle, tell the story in chronological order:
+  where the drivers started, the key turning points, how their strategies or pace differed, and the finish.
+- Use plain conversational language, two or three short sections, and a few relevant numbers. Choose details
+  that actually explain the battle; skip long lists of lap times, sector splits, pit-lane durations, weather
+  timestamps, sample sizes and data that doesn't change the story unless the question asks for them.
+- Include exactly one markdown source link at the end, labeled "Source", using the most useful relevant URL
+  from the findings. Do not insert citations throughout the report or imply the one linked source supports
+  every claim. Prefer an official race report when it covers the question; otherwise choose the most relevant
+  data source. Do not invent URLs or describe unofficial sources as official.
+- Do not output LaTeX, dollar-sign math, or technical notation. Explain comparisons in words. Don't repeat numbers.
+- Do not include a limitations section or list missing data. Mention a gap briefly only when it directly
+  prevents answering the question. Avoid speculation about unavailable tyre allocations or team radio.
+- Never claim a cause, driver intention, or track condition as fact unless the findings support it. Attribute
+  team explanations to the team and distinguish observations from plausible interpretations.
+- If using a paired-lap calculation, describe its lap range and what it compares accurately; don't call those
+  OpenF1 laps green-flag, clean, or flying. Don't present an interval to the car ahead as a gap between named
+  drivers unless the evidence establishes they were adjacent at the same time. A sensor recording no rain
+  does not establish a dry track. Omit technical statistics when they are not needed to answer the question.
+""",
     model=MODEL,
     model_settings=SETTINGS,
 )
