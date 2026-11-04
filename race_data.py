@@ -1,5 +1,6 @@
 """Read the bundled OpenF1 race snapshots."""
 import json
+import openf1_live
 import statistics
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -18,10 +19,15 @@ def get_evidence(session_key: str, drivers: list[str], kinds: list[str]) -> dict
     if not kinds or len(kinds) > 7 or any(kind not in allowed for kind in kinds):
         return {"error": "Choose from pit, stints, laps, position, weather, race_control, results."}
     evidence = {}
+    def safe_get(kind, driver=""):
+        try:
+            return get_data(session_key, kind, driver)
+        except (OSError, ValueError) as exc:
+            return {"error": f"{kind} data unavailable: {exc}"}
     for kind in dict.fromkeys(kinds):
         if kind in {"weather", "race_control", "results"}:
-            result = get_data(session_key, kind)
-            if kind == "results" and result.get("records"):
+            result = safe_get(kind)
+            if kind == "results" and result.get("records") and "Results" in result["records"][0]:
                 race = result["records"][0]
                 fields = ("position", "grid", "status", "points", "Driver", "Time")
                 result["records"] = [{key: row.get(key) for key in fields if row.get(key) is not None}
@@ -31,16 +37,18 @@ def get_evidence(session_key: str, drivers: list[str], kinds: list[str]) -> dict
             continue
         evidence[kind] = {}
         for driver in dict.fromkeys(drivers):
-            result = get_data(session_key, kind, driver)
+            result = safe_get(kind, driver)
             if kind == "laps" and "records" in result:
                 fields = ("driver_number", "lap_number", "date_start", "lap_duration", "is_pit_out_lap")
                 result["records"] = [{key: row.get(key) for key in fields} for row in result["records"]]
             evidence[kind][driver] = result
-    return {"race": RACES.get(str(session_key)), "evidence": evidence}
+    return {"race": RACES.get(str(session_key)) or openf1_live._sessions.get(str(session_key), {}).get("race"), "evidence": evidence}
 
 
 def get_data(session_key: str, kind: str, driver: str = "") -> dict:
     key = str(session_key)
+    if key not in RACES and openf1_live.has_session(key):
+        return openf1_live.get_data(key, kind, driver)
     if key not in RACES or kind not in KINDS | {"results"}:
         return {"error": "Unknown race or data type", "available_races": RACES, "available_types": sorted(KINDS | {"results"})}
     if kind == "results":
@@ -147,7 +155,7 @@ def compare_pace(session_key: str, driver_a: str, driver_b: str, start_lap: int,
     if not common:
         return {"error": "No comparable laps in this range after excluding pit and out laps."}
     differences = [series[0][lap] - series[1][lap] for lap in common]
-    return {"race": RACES[str(session_key)], "drivers": [driver_a, driver_b], "lap_range": [start_lap, end_lap],
+    return {"race": RACES.get(str(session_key)) or openf1_live._sessions.get(str(session_key), {}).get("race"), "drivers": [driver_a, driver_b], "lap_range": [start_lap, end_lap],
             "paired_laps": common, "sample_size": len(common),
             "median_paired_difference_seconds_a_minus_b": round(statistics.median(differences), 3),
             "method": "Median of per-lap differences, not a difference between driver medians. Same numbered laps; pit and following out laps excluded for both drivers. Negative difference means driver A was faster. The selected range may span multiple tire compounds. Safety cars, traffic, weather, fuel, and other effects are not automatically removed.",

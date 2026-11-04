@@ -5,7 +5,7 @@ Apex investigates questions about Formula 1 races. A lead finds the race and ass
 ## Evidence and coverage
 
 - **FastF1-derived historical laps:** 147 races in 2018–2024, from [f1-ml-lab's dataset](https://github.com/straightchlorine/f1-ml-lab/blob/master/data/laps_all.parquet), converted to SQLite. These are not full race histories: the [source pipeline](https://github.com/straightchlorine/f1-ml-lab/blob/master/scripts/build_dataset.py) retains accurate green-flag laps, excludes pit in/out laps, and filters laps slower than 107% of the fastest eligible lap. This can remove wet and slow laps and bias comparisons. Coverage varies by race and driver.
-- **OpenF1:** bundled laps, pit records, stints, positions, intervals, weather and race control for the 2024 British, Italian and São Paulo Grands Prix. Intervals refer to the car ahead, not necessarily another named driver. Pit-lane duration is not stationary stop time.
+- **OpenF1:** fetches historical race laps, pit records, stints, positions, intervals, weather and race control on demand for completed races from 2023 onward, depending on availability. Bundled snapshots remain for the 2024 British, Italian and São Paulo Grands Prix. Intervals refer to the car ahead, not necessarily another named driver. Pit-lane duration is not stationary stop time.
 - **Jolpica:** bundled race classifications for 2018–2024. The app can fall back to the [Jolpica API](https://api.jolpi.ca/docs/) if a snapshot is missing.
 - **FIA, Formula 1, and team accounts:** short attributed, source-linked paraphrases for the three detailed 2024 races. They are selected context, not complete articles or coverage of every race. Teams describe their own perspective.
 

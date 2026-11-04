@@ -1,5 +1,6 @@
 """Evidence from a filtered FastF1 dataset, Jolpica, and curated official accounts."""
 import json
+import openf1_live
 import sqlite3
 import statistics
 from functools import lru_cache
@@ -26,11 +27,26 @@ def catalog():
             for season, rnd, rid, event in rows}
 
 def find_races(year=0, query=''):
-    query = query.casefold().strip()
-    races = [dict(row, openf1_snapshot=key in SPECIAL.values(), official_context=key in SPECIAL.values())
-             for key, row in catalog().items() if (not year or row['year'] == year)
-             and (not query or query in row['race'].casefold())]
-    return {'races': races, 'count': len(races), 'coverage': '147 races with filtered FastF1-derived laps from 2018 to 2024; detailed OpenF1 snapshots and curated official accounts for 2024 Britain, Italy and Sao Paulo only. Race availability and data coverage vary.'}
+    text = query.casefold().strip()
+    bundled = [dict(row, openf1_snapshot=key in SPECIAL.values(), official_context=key in SPECIAL.values())
+               for key, row in catalog().items() if (not year or row['year'] == year)
+               and (not text or text in row['race'].casefold())]
+    live = []
+    error = None
+    if year >= 2023:
+        try:
+            live = openf1_live.find_races(year, query)
+        except (OSError, ValueError) as exc:
+            error = 'OpenF1 lookup failed: ' + str(exc)
+    # Prefer the detailed OpenF1 session when it matches a bundled snapshot or race.
+    if live:
+        bundled_names = {openf1_live._normalize(r['race']) for r in live}
+        bundled = [r for r in bundled if openf1_live._normalize(r['race']) not in bundled_names]
+    result = {'races': live + bundled, 'count': len(live) + len(bundled),
+              'coverage': 'OpenF1 detailed historical data fetched on demand for completed races from 2023 onward, subject to availability. Filtered FastF1-derived laps and Jolpica results bundled for 147 races in 2018–2024. Curated official accounts for the three original 2024 races.'}
+    if error:
+        result['lookup_warning'] = error + '; showing bundled races only.'
+    return result
 
 def _driver(key, driver):
     if key not in catalog():

@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 import race_data
 import historical_data
+import openf1_live
 from context_panel import AgentContexts, PanelHooks, add_context_panel
 
 # WIKIMEDIA_USERNAME and WIKIMEDIA_PASSWORD come from the .env file next to this one.
@@ -86,13 +87,18 @@ def compare_historical_pace(session_key: str, driver_a: str, driver_b: str, star
 
 @function_tool
 def get_structured_results(session_key: str) -> str:
-    """Get structured race classification from the Jolpica API.
+    """Get structured race classification from bundled Jolpica data or OpenF1.
 
     Args:
         session_key: Identifier returned by find_race, e.g. 2021_22.
     """
     if session_key in race_data.RACES:
         return json.dumps(race_data.get_data(session_key, "results"))
+    if openf1_live.has_session(session_key):
+        try:
+            return json.dumps(openf1_live.get_data(session_key, "results"), separators=(",", ":"))
+        except (OSError, ValueError) as exc:
+            return json.dumps({"error": f"OpenF1 results unavailable: {exc}"})
     return json.dumps(historical_data.results(session_key), separators=(",", ":"))
 
 
@@ -111,7 +117,7 @@ def get_race_evidence(session_key: str, drivers: list[str], kinds: list[str]) ->
     """Get several kinds of race evidence for up to three drivers in one call.
 
     Args:
-        session_key: 9558 for 2024 British GP, 9590 for 2024 Italian GP, or 9636 for 2024 Sao Paulo GP.
+        session_key: OpenF1 race session identifier returned by find_race, e.g. 9558.
         drivers: One to three surnames, three-letter codes, or numbers, e.g. ["HAM", "VER"].
         kinds: Relevant evidence types: pit, stints, laps, position, weather, race_control, or results.
     """
@@ -123,11 +129,11 @@ def get_race_evidence(session_key: str, drivers: list[str], kinds: list[str]) ->
 
 @function_tool
 def get_race_data(session_key: str, kind: str, driver: str = "", start_lap: int = 0, end_lap: int = 0) -> str:
-    """Read historical race observations from a bundled OpenF1 snapshot.
+    """Read historical race observations from OpenF1, fetching on demand when needed.
 
     Args:
-        session_key: 9558 for 2024 British GP, 9590 for 2024 Italian GP, or 9636 for 2024 Sao Paulo GP.
-        kind: sessions, drivers, laps, pit, stints, race_control, position, intervals, weather, or results (Jolpica).
+        session_key: OpenF1 race session identifier returned by find_race, e.g. 9558.
+        kind: sessions, drivers, laps, pit, stints, race_control, position, intervals, weather, or results (Jolpica for bundled snapshots; OpenF1 otherwise).
         driver: Driver surname, three-letter abbreviation, or number. Required for laps.
         start_lap: For intervals, first lap of a short window, e.g. 25. Required for intervals.
         end_lap: For intervals, last lap of a window of at most eight laps, e.g. 29. Required for intervals.
@@ -147,7 +153,7 @@ def compare_lap_pace(session_key: str, driver_a: str, driver_b: str, start_lap: 
     """Calculate a paired lap pace comparison in a race window.
 
     Args:
-        session_key: 9558, 9590, or 9636.
+        session_key: OpenF1 race session identifier returned by find_race, e.g. 9558.
         driver_a: First driver surname, three-letter code, or number, e.g. HAM.
         driver_b: Second driver surname, three-letter code, or number, e.g. VER.
         start_lap: First lap to include, e.g. 20.
@@ -165,7 +171,7 @@ researcher = Agent(
     name="Researcher",
     instructions="""\
 Investigate your assigned F1 question using tools. Use only tool results.
-Choose tools that fit your assigned task and the race. For the three detailed OpenF1 races, batch relevant lookups with get_race_evidence. For historical races, use get_historical_laps, compare_historical_pace and get_structured_results. Use get_official_context when investigating official accounts.
+Choose tools that fit your assigned task and the race. For OpenF1 sessions, batch relevant lookups with get_race_evidence; data are fetched on demand. For older bundled FastF1 races, use get_historical_laps, compare_historical_pace and get_structured_results. Use get_official_context when investigating official accounts.
 Make only essential additional calls; do not request the same data twice. Batch independent tool calls
 in one turn. Complete your research promptly and report gaps instead of repeatedly searching.
 Cite each factual finding with the exact source URL provided by the tool and include relevant
@@ -182,7 +188,7 @@ OpenF1 and Jolpica are unofficial. FastF1 and OpenF1 can share underlying timing
 async def run_research(state: Research, task: str, session_key: str) -> str:
     if state.researchers >= state.researcher_limit:
         return "No researchers left. Reply DONE."
-    if session_key not in historical_data.catalog():
+    if session_key not in historical_data.catalog() and not openf1_live.has_session(session_key):
         return "Unknown race session. Use find_race to look up an available race."
     state.researchers += 1
     state.race_keys.append(session_key)
@@ -210,12 +216,11 @@ lead = Agent(
     name="Lead",
     instructions="""\
 You lead an F1 deep research team. First call find_race to identify the exact race and available
-sources. Filter by the year and a short part of the event name. If the question lacks a race or is too
+sources. Supply the four-digit year and a short part of the event name; the year is required for discovering OpenF1 races. If the question lacks a race or is too
 vague, ask one clarifying question. If unavailable, explain the available historical coverage.
 Call research in parallel in one turn for exactly 3 complementary, question-specific tasks.
 Split the investigation between race results and sequence, a quantitative timing/pace analysis, and a
-competing explanation or official/team account. Only the three detailed 2024 races have OpenF1 and
-curated official accounts; other races have filtered FastF1 laps and Jolpica results. Tell each
+competing explanation or official/team account. OpenF1 historical race data from 2023 onward can be fetched on demand; the returned race key tells you which source is available. Older bundled races have filtered FastF1 laps and Jolpica results. Only three 2024 races have curated official accounts. Never ask for current live data. Tell each
 researcher the race key and the driver names and three-letter codes. Then say DONE; a separate review follows.
 Do not call research again in this initial phase.
 Do not infer that a pit stop caused a result or claim an alternative strategy would win.""",

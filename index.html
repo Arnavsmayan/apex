@@ -129,6 +129,24 @@
             button:not(:disabled):hover {
                 background: #bd0500;
             }
+            .examples { margin-top: 0.85rem; }
+            .examples-label { color: #303039; font-size: 0.76rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.045em; }
+            .examples-label span { color: #777782; font-size: 0.7rem; font-weight: 400; letter-spacing: 0; text-transform: none; margin-left: 0.4rem; }
+            .example-list { display: grid; gap: 0.4rem; margin-top: 0.6rem; }
+            button.example-question {
+                padding: 0.6rem 0.75rem;
+                border: 1px solid #e4e4e8;
+                border-left: 3px solid #e10600;
+                border-radius: 3px;
+                background: #fff;
+                color: #34343d;
+                text-align: left;
+                font-size: 0.75rem;
+                line-height: 1.4;
+                letter-spacing: 0;
+                text-transform: none;
+            }
+            button.example-question:hover { background: #fff4f3; color: #19191e; }
             button:focus-visible {
                 outline: 2px solid #e10600;
                 outline-offset: 3px;
@@ -240,7 +258,15 @@
                 <h1>Explore the race behind the result.</h1>
                 <p>Ask how pit stops, tire choices, and race events shaped a battle on track.</p>
                 <p class="coverage">Research includes independent analysis and a follow-up review.</p>
-                <p class="coverage">Explore filtered lap data for 147 races from 2018–2024. More detailed race data and official accounts are available for the 2024 British, Italian, and São Paulo Grands Prix.</p>
+                <p class="coverage">Explore filtered lap data from 2018–2024 and detailed historical race data fetched on demand from 2023 onward. Coverage varies by race.</p>
+                <div class="examples" aria-label="Example questions">
+                    <div class="examples-label">Try an example <span>Choose a question, then hit Run</span></div>
+                    <div class="example-list">
+                        <button class="example-question" type="button">How did Hamilton and Verstappen's pit stops compare at the 2024 British Grand Prix?</button>
+                        <button class="example-question" type="button">How did Norris and Verstappen's tyre strategies compare at the 2025 Australian Grand Prix?</button>
+                        <button class="example-question" type="button">How did Hamilton and Verstappen's lap pace compare during laps 20–30 of the 2021 Abu Dhabi Grand Prix?</button>
+                    </div>
+                </div>
             </div>
 
             <section>
@@ -281,6 +307,13 @@
                 const question = $("question");
                 question.style.height = "auto";
                 question.style.height = `${question.scrollHeight}px`;
+            }
+            for (const example of document.querySelectorAll(".example-question")) {
+                example.addEventListener("click", () => {
+                    $("question").value = example.textContent.trim();
+                    resizeQuestion();
+                    $("question").focus();
+                });
             }
             $("question").addEventListener("input", resizeQuestion);
             let questionWidth = 0;

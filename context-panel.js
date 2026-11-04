@@ -17,17 +17,39 @@ contextStyle.textContent = `
         width: var(--context-width);
         overflow-y: auto;
         padding: 1.5rem;
-        background: #fafafa;
-        border-left: 1px solid #e0e0e0;
+        background: #f3f3f5;
+        border-left: 3px solid #e10600;
         font-family: ui-monospace, monospace;
         font-size: 0.75rem;
     }
+    #context-panel::before {
+        content: "APEX  /  PIT WALL";
+        display: block;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        margin: -1.5rem -1.5rem 1rem;
+        padding: 0.8rem 1.5rem;
+        border-bottom: 3px solid #e10600;
+        background: linear-gradient(115deg, #19191e 0%, #19191e 80%, #e10600 80%, #e10600 83%, #19191e 83%);
+        color: #fff;
+        font: italic 800 0.8rem system-ui, sans-serif;
+        letter-spacing: 0.12em;
+    }
+    #context-panel:empty::after {
+        content: "Your research team’s activity will appear here when a run starts.";
+        display: block;
+        padding: 0.5rem 0;
+        color: #71717c;
+        font: 0.78rem/1.6 system-ui, sans-serif;
+    }
+    #context-panel.timeline::before { margin: 0 -1rem; padding-left: 1rem; }
     #context-panel h2, .ctx-head {
         font-family: system-ui, sans-serif;
         font-size: 0.75rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        color: #999;
+        color: #66666f;
     }
     #context-panel h2 { margin-bottom: 1rem; }
     /* Several agents: a timeline grid, one column per agent */
@@ -35,18 +57,23 @@ contextStyle.textContent = `
     /* Columns share the width, down to 16rem each; only then does the panel scroll sideways */
     .ctx-grid { display: grid; grid-template-columns: repeat(var(--ctx-cols, 1), minmax(16rem, 1fr)); column-gap: 1rem; }
     .ctx-head {
-        position: sticky; top: 0; z-index: 1;
-        background: #fafafa;
-        padding: 1rem 0 0.6rem;
-        border-top: 3px solid transparent;
+        position: sticky; top: 2.45rem; z-index: 1;
+        background: #f3f3f5;
+        padding: 1rem 0.65rem 0.65rem;
+        border-top: 4px solid #bbbcc2;
         margin-bottom: 0.5rem;
+        color: #4c4c56;
+        font-weight: 750;
+        font-style: italic;
+        letter-spacing: 0.07em;
     }
-    .ctx-head.active { color: #000; border-top-color: #000; }
+    .ctx-head.active { color: #19191e; border-top-color: #e10600; }
     .ctx-wait { border-left: 2px dashed #ccc; margin-left: 1px; }
     .ctx-note { font-family: system-ui, sans-serif; color: #999; padding: 0.2rem 0.75rem; margin-bottom: 0.5rem; }
     .ctx-note.divider { border-top: 1px solid #ccc; padding-top: 0.5rem; }
     .context-msg {
         border-left: 3px solid #999;
+        background: #fff;
         padding: 0.4rem 0.75rem;
         margin-bottom: 0.5rem;
         white-space: pre-wrap;
