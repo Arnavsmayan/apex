@@ -3657,7 +3657,7 @@ wheels = [
 ]
 
 [[package]]
-name = "wikipedia-deep-research"
+name = "apex-f1-research"
 version = "0.1.0"
 source = { virtual = "." }
 dependencies = [

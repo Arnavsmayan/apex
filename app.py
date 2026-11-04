@@ -17,7 +17,6 @@ import historical_data
 import openf1_live
 from context_panel import AgentContexts, PanelHooks, add_context_panel
 
-# WIKIMEDIA_USERNAME and WIKIMEDIA_PASSWORD come from the .env file next to this one.
 load_dotenv(Path(__file__).parent / ".env")
 
 # Traces upload to OpenAI by default, which needs an OpenAI key. We're on Gemini.
