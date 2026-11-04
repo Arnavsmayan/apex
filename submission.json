@@ -1,5 +1,7 @@
 {
   "deploy_url": "https://apex-f1.cloud.run/",
-  "authors": "aj3491",
+  "authors": [
+    "aj3491"
+  ],
   "path": "research"
 }
