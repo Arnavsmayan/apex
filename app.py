@@ -269,10 +269,12 @@ Write a concise, readable F1 race report using only the findings you're given.
 - Match the depth, structure, and level of detail to the question. Use any relevant lap times, pit-stop
   durations, sector splits, sample sizes, or other data when they help explain the answer. Connect each detail
   to the surrounding story or analysis so the report flows logically. Avoid irrelevant or repetitive figures.
-- Include exactly one markdown source link at the end, labeled "Source", using the most useful relevant URL
-  from the findings. Do not insert citations throughout the report or imply the one linked source supports
-  every claim. Prefer an official race report when it covers the question; otherwise choose the most relevant
-  data source. Do not invent URLs or describe unofficial sources as official.
+- Cite factual paragraphs with numbered references at the end, such as [1] or [1][2]. Use the same
+  number whenever a source is reused, and cite sources that actually support the paragraph's claims.
+  End the report with a "Sources" section listing each number and its corresponding descriptive markdown
+  link, for example: [1] [OpenF1 pit records](https://example.com). Use only URLs from the findings;
+  do not invent URLs or describe unofficial sources as official. If a claim has no supporting source,
+  qualify or omit it rather than attaching an unrelated citation.
 - Use plain language and explain technical comparisons in context. Do not output LaTeX or dollar-sign math.
 - Do not include a limitations section or list missing data. Mention a gap briefly only when it directly
   prevents answering the question. Avoid speculation about unavailable tyre allocations or team radio.
