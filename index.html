@@ -90,7 +90,12 @@
                 padding: 0.6rem 0;
                 border: none;
                 border-bottom: 1px solid #e0e0e0;
+                font-family: inherit;
                 font-size: 1rem;
+                line-height: 1.5;
+                resize: none;
+                overflow-y: hidden;
+                display: block;
                 outline: none;
             }
             #question:focus {
@@ -184,7 +189,7 @@
                 <h2>Task</h2>
                 <form id="task">
                     <label>Question
-                        <input id="question" value="How did Hamilton and Verstappen's pit stops compare at the 2024 British Grand Prix?" placeholder="Ask about a race or driver" autocomplete="off" required />
+                        <textarea id="question" rows="2" placeholder="Ask about a race or driver" required>How did Hamilton and Verstappen's pit stops compare at the 2024 British Grand Prix?</textarea>
                     </label>
                     <button id="run" type="submit">Run</button>
                 </form>
@@ -204,6 +209,20 @@
         <script src="/context-panel.js"></script>
         <script>
             const $ = (id) => document.getElementById(id);
+            function resizeQuestion() {
+                const question = $("question");
+                question.style.height = "auto";
+                question.style.height = `${question.scrollHeight}px`;
+            }
+            $("question").addEventListener("input", resizeQuestion);
+            let questionWidth = 0;
+            new ResizeObserver(([entry]) => {
+                if (entry.contentRect.width !== questionWidth) {
+                    questionWidth = entry.contentRect.width;
+                    resizeQuestion();
+                }
+            }).observe($("question"));
+            resizeQuestion();
             let source = null;
             let runId = null;
 
