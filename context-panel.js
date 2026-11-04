@@ -17,24 +17,25 @@ contextStyle.textContent = `
         width: var(--context-width);
         overflow-y: auto;
         padding: 1.5rem;
-        background: #f7f7f7;
+        background: linear-gradient(160deg, #fff8f7 0%, #f7f7f7 18rem);
         border-left: 1px solid #dedee2;
         font-family: ui-monospace, monospace;
         font-size: 0.75rem;
     }
     #context-panel::before {
-        content: "PIT WALL";
+        content: "PIT WALL  /  RESEARCH FEED";
         display: block;
         position: sticky;
         top: 0;
         z-index: 3;
         margin: -1.5rem -1.5rem 1rem;
         padding: 1.5rem;
-        border-bottom: 1px solid #dedee2;
-        background: #f7f7f7;
+        border-bottom: 1px solid #e4e4e8;
+        background: linear-gradient(118deg, #fff 0%, #fff 82%, #fcebe9 82%, #fcebe9 86%, #fff 86%);
+        box-shadow: inset 4px 0 0 #e10600;
         color: #19191e;
-        font: 750 0.85rem system-ui, sans-serif;
-        letter-spacing: 0.05em;
+        font: 800 0.85rem system-ui, sans-serif;
+        letter-spacing: 0.07em;
     }
     #context-panel:empty::after {
         content: "Your research team’s activity will appear here when a run starts.";
@@ -61,24 +62,52 @@ contextStyle.textContent = `
         background: #f7f7f7;
         padding: 1rem 0.65rem 0.65rem;
         border-top: 2px solid #dedee2;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.65rem;
         color: #4c4c56;
         font-weight: 750;
         letter-spacing: 0.05em;
     }
+    .ctx-head::before {
+        content: "";
+        display: inline-block;
+        width: 0.5rem;
+        height: 0.5rem;
+        margin-right: 0.55rem;
+        border-radius: 50%;
+        background: #c6c6cd;
+        vertical-align: 0.05rem;
+    }
     .ctx-head.active { color: #19191e; border-top-color: #e10600; }
+    .ctx-head.active::before { background: #e10600; box-shadow: 0 0 0 3px #fae2e0; }
     .ctx-wait { border-left: 2px dashed #ccc; margin-left: 1px; }
     .ctx-note { font-family: system-ui, sans-serif; color: #999; padding: 0.2rem 0.75rem; margin-bottom: 0.5rem; }
     .ctx-note.divider { border-top: 1px solid #ccc; padding-top: 0.5rem; }
     .context-msg {
+        border: 1px solid #e7e7eb;
         border-left: 3px solid #999;
+        border-radius: 4px;
         background: #fff;
-        padding: 0.4rem 0.75rem;
-        margin-bottom: 0.5rem;
+        box-shadow: 0 2px 8px #19191e08;
+        padding: 0.65rem 0.75rem;
+        margin-bottom: 0.6rem;
         white-space: pre-wrap;
         word-break: break-word;
     }
-    .context-msg .role { font-weight: bold; }
+    .context-msg .role {
+        display: inline-block;
+        margin-bottom: 0.35rem;
+        padding: 0.15rem 0.4rem;
+        border-radius: 3px;
+        background: #f1f1f4;
+        color: #55555f;
+        font: 750 0.65rem system-ui, sans-serif;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+    }
+    .context-msg.system .role { color: #b80700; background: #fff0ef; }
+    .context-msg.assistant .role { color: #3459a6; background: #eef3fd; }
+    .context-msg.tool .role { color: #8a5b00; background: #fff6e3; }
+    .context-msg.user .role { color: #24713f; background: #edf8f0; }
     .context-msg.system { border-color: #dc2626; }
     .context-msg.user { border-color: #16a34a; }
     .context-msg.assistant { border-color: #2563eb; }
