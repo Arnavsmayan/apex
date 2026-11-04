@@ -1,5 +1,7 @@
 # Project 2: Apex
 
+### The story behind every F1 race.
+
 - **Path:** Deep Research
 - **Deployed agent:** [apex-f1.cloud.run](https://apex-f1.cloud.run/)
 - **Model:** Gemini 3.8 Flash on Vertex AI
@@ -9,10 +11,6 @@
 Apex investigates how F1 race strategy, tyre choices, pace, and race events shaped a result. It is intended for F1 fans and students who want to explore what happened during a race or across a season, with evidence from race data and selected reports.
 
 The exploration problem is to explain the decisions and events behind a race result, including questions such as how two drivers' pit stops compared or how their strategies shaped a battle. Apex uses multiple researchers to examine different parts of a question before combining the findings.
-
-## Using the deployed agent
-
-Open **[apex-f1.cloud.run](https://apex-f1.cloud.run/)**, enter a question or choose an example, and select **Run**. Watch the researchers work in the activity feed, then use **Expand** to read the report in a larger view. The app is deployed on Google Cloud Run; sign in with an authorized account if prompted.
 
 ## Deep Research implementation
 
