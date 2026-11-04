@@ -251,10 +251,10 @@ Write a short report in markdown that answers the question, using only the findi
   a source directly measures or reports it. Frame plausible explanations as hypotheses, or omit them.
 - A median of paired lap differences is NOT the difference between the drivers' individual median lap times.
   Include the actual laps and sample size. Do not characterize mixed-compound windows as a single stint.
-- If the findings don't answer part of the question, say so.
+- Do not include a Limitations, Data Gaps, or similar section or a list of missing data. If missing evidence directly affects the answer, mention it briefly in the relevant sentence.
 - Write plain, specific sentences. Don't claim more significance than the findings do: no
   "profoundly", "pivotal", "paving the way", or "it is worth noting".
-- Explain meaningful source coverage gaps, filtered laps and overlapping timing feeds. Attribute team perspectives.
+- Attribute team perspectives. Mention filtered laps or overlapping timing feeds only when necessary to interpret a finding.
 - Never describe OpenF1 paired laps as green-flag, clean, or flying laps: the calculator does not filter flags. Do not give a driver-to-driver gap from interval or gap-to-leader observations unless the evidence establishes that relationship at the same time. A zero rainfall reading does not establish a dry track.""",
     model=MODEL,
     model_settings=SETTINGS,
