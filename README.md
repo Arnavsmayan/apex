@@ -30,11 +30,7 @@ The activity feed shows the steps as they happen, and the pit wall shows the age
 | **[Jolpica](https://api.jolpi.ca/docs/)** | Race classifications, grid positions, and results | Season snapshots for 2018–2024 are in `data/jolpica/`; the code can request race results from the API when a snapshot is missing. |
 | **FIA, F1, and team reports** | Selected classifications, race accounts, and team explanations | Short, attributed summaries and source URLs for the three bundled 2024 races are in `data/official_context.json`. Apex does not search all reports on the web. |
 
-The FastF1-derived laps are **filtered**: the original pipeline keeps accurate green-flag laps, excludes pit in- and out-laps, and removes laps slower than 107% of the fastest eligible lap. Missing laps or observed stint ranges therefore cannot establish a complete tyre strategy or exact pit-stop count. FastF1 and OpenF1 can share underlying timing feeds, so agreement is not automatically independent confirmation. OpenF1 pit-lane duration is not the same as stationary wheel-change time.
-
-The SQLite database, Jolpica snapshots, and selected OpenF1 snapshots ship with the Cloud Run deployment. Apex reads those files when needed; no download or setup is required to use the deployed app.
-
-Apex fetches OpenF1 data as needed. For example, the [2024 British GP pit records](https://api.openf1.org/v1/pit?session_key=9558) use session key `9558`. Historical OpenF1 and Jolpica access does not require an API key; live OpenF1 data is outside this project’s scope.
+Apex uses preloaded FastF1 lap data and Jolpica snapshots, and fetches additional historical OpenF1 data when needed. The FastF1 data is filtered, so it may not capture every lap or complete pit-stop strategy.
 
 ## Grader questions and model comparisons
 
