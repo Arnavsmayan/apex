@@ -6,6 +6,10 @@ Apex is a deep research agent for F1 fans, students, and anyone curious about **
 
 **[Open Apex](https://apex-f1.cloud.run/)** · [Full sample answers](COMPARISONS.md) · [OpenF1](https://openf1.org/docs/) · [Jolpica](https://api.jolpi.ca/docs/)
 
+## Try Apex
+
+Open **[apex-f1.cloud.run](https://apex-f1.cloud.run/)**, enter a question or choose an example, and select **Run**. Watch the researchers work in the activity feed, then use **Expand** to read the report in a larger view. The app is deployed on Google Cloud Run; sign in with an authorized account if prompted.
+
 ## How it works
 
 1. **Lead:** identifies the race or season, breaks the question into focused tasks, and starts three researchers in parallel.
@@ -26,12 +30,7 @@ The activity feed shows the steps as they happen, and the pit wall shows the age
 
 The FastF1-derived laps are **filtered**: the original pipeline keeps accurate green-flag laps, excludes pit in- and out-laps, and removes laps slower than 107% of the fastest eligible lap. Missing laps or observed stint ranges therefore cannot establish a complete tyre strategy or exact pit-stop count. FastF1 and OpenF1 can share underlying timing feeds, so agreement is not automatically independent confirmation. OpenF1 pit-lane duration is not the same as stationary wheel-change time.
 
-To inspect the bundled data after cloning the repository:
-
-```bash
-uv sync --frozen
-uv run python -c "import sqlite3; db=sqlite3.connect('data/fastf1/clean_laps.sqlite3'); print(db.execute('SELECT season, COUNT(DISTINCT race_id) FROM laps GROUP BY season ORDER BY season').fetchall())"
-```
+The SQLite database, Jolpica snapshots, and selected OpenF1 snapshots ship with the Cloud Run deployment. Apex reads those files when needed; no download or setup is required to use the deployed app.
 
 Apex fetches OpenF1 data as needed. For example, the [2024 British GP pit records](https://api.openf1.org/v1/pit?session_key=9558) use session key `9558`. Historical OpenF1 and Jolpica access does not require an API key; live OpenF1 data is outside this project’s scope.
 
@@ -349,21 +348,3 @@ Following a floor upgrade in Austin, the car’s balance stabilized somewhat, bu
 | `compare_lap_pace` | OpenF1 session key, two drivers, and a lap range, such as `9558`, `HAM`, `VER`, `40`, `52` | Calculates the median of same-numbered paired lap differences, excluding pit and out laps. |
 | `get_historical_laps` / `compare_historical_pace` | Bundled race key such as `2021_22`, driver codes such as `HAM` and `VER`, and a lap range | Retrieves or compares filtered FastF1-derived laps. |
 | `get_structured_results` / `get_official_context` | A race session key returned by `find_race` | Retrieves classifications or the selected official and team summaries when available. |
-
-## Run locally
-
-Install [uv](https://docs.astral.sh/uv/) and Python 3.10 or later, clone the repository, and install its locked dependencies:
-
-```bash
-git clone https://github.com/Arnavsmayan/apex.git
-cd apex
-uv sync --frozen
-```
-
-Configure Google Cloud Application Default Credentials with access to Vertex AI, set the project to one with Vertex AI enabled, then start the app:
-
-```bash
-uv run uvicorn app:app --reload
-```
-
-Open `http://127.0.0.1:8000`. The deployed Cloud Run service uses its service account for Vertex AI; no API keys need to be placed in the repository.
