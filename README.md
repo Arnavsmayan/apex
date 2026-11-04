@@ -1,6 +1,4 @@
-# Project 2: Apex
-
-### The story behind every F1 race.
+# Project 2: Apex: The story behind every F1 race.
 
 - **Path:** Deep Research
 - **Deployed agent:** [apex-f1.cloud.run](https://apex-f1.cloud.run/)
