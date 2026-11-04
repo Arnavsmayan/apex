@@ -332,7 +332,7 @@ async def chat(body: ChatRequest):
     contexts = AgentContexts()
     sessions[session_id] = contexts
     hooks = PanelHooks(contexts, lambda event: None)
-    report = await asyncio.wait_for(deep_research(body.message, hooks), timeout=270)
+    report = await asyncio.wait_for(deep_research(body.message, hooks), timeout=290)
     calls = []
     for event in contexts.events:
         message = event.get("message", {})
@@ -364,7 +364,7 @@ async def run(question: str):
 
     async def work():
         try:
-            report = await asyncio.wait_for(deep_research(question, hooks), timeout=270)
+            report = await asyncio.wait_for(deep_research(question, hooks), timeout=290)
             queue.put_nowait({"type": "done", "markdown": report})
         except Exception as e:
             # Auth, quota, a model that won't stop: show it on the page, not as a dropped stream.
