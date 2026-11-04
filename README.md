@@ -1,16 +1,20 @@
-# Apex
+# Project 2: Apex
 
-### The story behind every F1 race.
+- **Path:** Deep Research
+- **Deployed agent:** [apex-f1.cloud.run](https://apex-f1.cloud.run/)
+- **Model:** Gemini 3.8 Flash on Vertex AI
 
-Apex is a deep research agent for F1 fans, students, and anyone curious about **how a race unfolded**, not just who won. Ask about a pit-stop decision, a battle between drivers, or a season of tyre strategy. Apex investigates timing data and race accounts, then turns the findings into a report.
+## Project overview
 
-**[Open Apex](https://apex-f1.cloud.run/)** · [Full sample answers](COMPARISONS.md) · [OpenF1](https://openf1.org/docs/) · [Jolpica](https://api.jolpi.ca/docs/)
+Apex investigates how F1 race strategy, tyre choices, pace, and race events shaped a result. It is intended for F1 fans and students who want to explore what happened during a race or across a season, with evidence from race data and selected reports.
 
-## Try Apex
+The exploration problem is to explain the decisions and events behind a race result, including questions such as how two drivers' pit stops compared or how their strategies shaped a battle. Apex uses multiple researchers to examine different parts of a question before combining the findings.
+
+## Using the deployed agent
 
 Open **[apex-f1.cloud.run](https://apex-f1.cloud.run/)**, enter a question or choose an example, and select **Run**. Watch the researchers work in the activity feed, then use **Expand** to read the report in a larger view. The app is deployed on Google Cloud Run; sign in with an authorized account if prompted.
 
-## How it works
+## Deep Research implementation
 
 1. **Lead:** identifies the race or season, breaks the question into focused tasks, and starts three researchers in parallel.
 2. **Researchers:** work in separate contexts, retrieve race data, calculate comparisons, and investigate their assigned angles.
@@ -19,7 +23,7 @@ Open **[apex-f1.cloud.run](https://apex-f1.cloud.run/)**, enter a question or ch
 
 The activity feed shows the steps as they happen, and the pit wall shows the agents’ contexts. Reports can be expanded for easier reading. All agents use **Gemini 3.8 Flash on Vertex AI**. The `/chat` endpoint returns `response`, `session_id`, and `tool_calls`, including an `agent` field on recorded sub-agent calls.
 
-## Data
+## Data sources and loading
 
 | Source | What Apex uses | Coverage and how it is loaded |
 | --- | --- | --- |
@@ -34,7 +38,7 @@ The SQLite database, Jolpica snapshots, and selected OpenF1 snapshots ship with 
 
 Apex fetches OpenF1 data as needed. For example, the [2024 British GP pit records](https://api.openf1.org/v1/pit?session_key=9558) use session key `9558`. Historical OpenF1 and Jolpica access does not require an API key; live OpenF1 data is outside this project’s scope.
 
-## Try these questions
+## Grader questions and model comparisons
 
 These are the same examples available in the app. The **expected answers** below identify specific facts to look for. The side-by-side columns are excerpts from actual runs on **November 3, 2026**; [full captured outputs](COMPARISONS.md) are included. The baseline used the same `gemini-3.8-flash` model in separate Vertex AI Studio conversations, with an empty system-instructions field and Google grounding, function calling, code execution, and URL context disabled. These are individual outputs, not an accuracy benchmark, and may contain errors.
 
@@ -337,7 +341,7 @@ Following a floor upgrade in Austin, the car’s balance stabilized somewhat, bu
 
 </details>
 
-## Research tools
+## Tool parameters
 
 | Tool | What to pass | What it does |
 | --- | --- | --- |
