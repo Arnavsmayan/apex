@@ -148,14 +148,71 @@
                 text-transform: none;
                 letter-spacing: 0;
             }
-            #output {
-                font-family: system-ui, sans-serif;
+            .report {
+                color: #25252b;
                 font-size: 0.9rem;
-                white-space: pre-wrap;
-                word-break: break-word;
-                line-height: 1.65;
+                line-height: 1.7;
+                overflow-wrap: anywhere;
             }
-            #output a { color: #b80700; overflow-wrap: anywhere; }
+            .report > * + * { margin-top: 0.9em; }
+            .report h1, .report h2, .report h3, .report h4 {
+                display: block;
+                color: #19191e;
+                font-weight: 700;
+                letter-spacing: normal;
+                text-transform: none;
+                margin: 1.35em 0 0.45em;
+                line-height: 1.3;
+            }
+            .report h1 { font-size: 1.35em; }
+            .report h2 { font-size: 1.22em; }
+            .report h3, .report h4 { font-size: 1.08em; }
+            .report > :first-child { margin-top: 0; }
+            .report ul, .report ol { padding-left: 1.5em; }
+            .report li + li { margin-top: 0.35em; }
+            .report a { color: #b80700; }
+            .report hr { border: 0; border-top: 1px solid #e4e4e8; margin: 1.5em 0; }
+            .report blockquote { border-left: 3px solid #e10600; padding-left: 1em; color: #62626c; }
+            .report pre { overflow-x: auto; padding: 0.8em; background: #f5f5f5; }
+            .report code { overflow-wrap: anywhere; }
+            .report table { display: block; overflow-x: auto; border-collapse: collapse; }
+            .report th, .report td { border: 1px solid #e4e4e8; padding: 0.4em 0.7em; text-align: left; }
+            .output-heading { align-items: center; }
+            .output-action {
+                padding: 0.35rem 0.5rem;
+                border: 1px solid #dedee2;
+                border-radius: 4px;
+                background: transparent;
+                color: #5b5b64;
+                font-size: 0.65rem;
+                letter-spacing: 0.02em;
+            }
+            .output-action:not(:disabled):hover { background: #f3f3f5; color: #19191e; }
+            .report-dialog {
+                width: min(900px, calc(100% - 2rem));
+                max-width: none;
+                max-height: calc(100% - 2rem);
+                margin: auto;
+                padding: 0;
+                border: 1px solid #dedee2;
+                border-radius: 8px;
+                background: #fff;
+                box-shadow: 0 20px 70px #0003;
+            }
+            .report-dialog::backdrop { background: #18181eb3; }
+            .dialog-heading {
+                position: sticky;
+                top: 0;
+                z-index: 1;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 1rem 1.5rem;
+                background: #fff;
+                border-bottom: 1px solid #e4e4e8;
+            }
+            .dialog-heading h2 { margin: 0; color: #66666f; }
+            #expanded-output { padding: 1.75rem 2rem 2.5rem; font-size: 1rem; }
             .empty {
                 color: #999;
             }
@@ -201,11 +258,21 @@
             </section>
 
             <section>
-                <h2>Output</h2>
-                <div id="output" class="empty">The report's markdown appears here.</div>
+                <h2 class="output-heading">Output <button id="expand-output" class="output-action" type="button" disabled aria-haspopup="dialog">Expand ↗</button></h2>
+                <div id="output" class="report empty">The report will appear here.</div>
             </section>
         </main>
 
+        <dialog id="report-dialog" class="report-dialog" aria-labelledby="report-title">
+            <div class="dialog-heading">
+                <h2 id="report-title">Research report</h2>
+                <button id="close-report" class="output-action" type="button" aria-label="Close expanded report">Close ✕</button>
+            </div>
+            <div id="expanded-output" class="report"></div>
+        </dialog>
+
+        <script src="/vendor/marked.min.js"></script>
+        <script src="/vendor/purify.min.js"></script>
         <script src="/context-panel.js"></script>
         <script>
             const $ = (id) => document.getElementById(id);
@@ -240,23 +307,21 @@
             }
 
             function showOutput(markdown) {
-                $("output").className = "";
                 const output = $("output");
-                output.replaceChildren();
-                const link = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|\[(https?:\/\/[^\]\s]+)\]/g;
-                let previous = 0;
-                for (const match of markdown.matchAll(link)) {
-                    output.append(document.createTextNode(markdown.slice(previous, match.index)));
-                    const a = document.createElement("a");
-                    a.href = match[2] || match[3];
-                    a.textContent = match[1] || match[3];
-                    a.target = "_blank";
-                    a.rel = "noopener noreferrer";
-                    output.append(a);
-                    previous = match.index + match[0].length;
+                output.className = "report";
+                output.innerHTML = DOMPurify.sanitize(marked.parse(markdown));
+                for (const link of output.querySelectorAll("a")) {
+                    link.target = "_blank";
+                    link.rel = "noopener noreferrer";
                 }
-                output.append(document.createTextNode(markdown.slice(previous)));
+                $("expand-output").disabled = false;
             }
+
+            $("expand-output").addEventListener("click", () => {
+                $("expanded-output").replaceChildren(...Array.from($("output").childNodes, node => node.cloneNode(true)));
+                $("report-dialog").showModal();
+            });
+            $("close-report").addEventListener("click", () => $("report-dialog").close());
 
             function finish(message) {
                 $("status").textContent = message;
@@ -270,8 +335,9 @@
                 const params = new URLSearchParams({ question: $("question").value.trim() });
 
                 $("activity").replaceChildren();
-                $("output").className = "empty";
-                $("output").textContent = "The report's markdown appears here.";
+                $("output").className = "report empty";
+                $("output").textContent = "The report will appear here.";
+                $("expand-output").disabled = true;
                 $("status").textContent = "running";
                 $("run").disabled = true;
                 resetContext();

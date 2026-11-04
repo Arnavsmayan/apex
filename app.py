@@ -8,7 +8,7 @@ import uvicorn
 from agents import Agent, ModelSettings, RunContextWrapper, Runner, function_tool, set_tracing_disabled
 from agents.extensions.models.litellm_model import LitellmModel
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel
 
@@ -316,6 +316,13 @@ async def chat(body: ChatRequest):
 def index():
     # no-cache: browsers otherwise keep serving an old page after a redeploy
     return FileResponse(HERE / "index.html", headers={"Cache-Control": "no-cache"})
+
+
+@app.get("/vendor/{filename}")
+def vendor_script(filename: str):
+    if filename not in {"marked.min.js", "purify.min.js"}:
+        raise HTTPException(status_code=404)
+    return FileResponse(HERE / "vendor" / filename, media_type="application/javascript")
 
 
 @app.get("/run")
