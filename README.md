@@ -15,7 +15,10 @@ FastF1 and OpenF1 may derive observations from the same timing feeds. Agreement 
 
 - How did Hamilton and Verstappen's pit stops compare at the 2024 British Grand Prix?
 - Why did Leclerc finish ahead of the McLarens at the 2024 Italian Grand Prix?
-- How did Hamilton and Verstappen's retained clean-lap pace compare during laps 20–30 of the 2021 Abu Dhabi Grand Prix?
+- How did Leclerc and Piastri battle for victory at the 2024 Italian Grand Prix?
+- How did Verstappen's tyre strategy vary across the 2024 season?
+
+The season-wide overview combines results with the retained tyre observations for each race. Because the laps were filtered, observed ranges do not establish complete stints or exact pit-stop counts. Researchers can inspect individual races with OpenF1 when available.
 
 ## Run locally
 

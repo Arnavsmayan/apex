@@ -17,24 +17,24 @@ contextStyle.textContent = `
         width: var(--context-width);
         overflow-y: auto;
         padding: 1.5rem;
-        background: #f3f3f5;
-        border-left: 3px solid #e10600;
+        background: #f7f7f7;
+        border-left: 1px solid #dedee2;
         font-family: ui-monospace, monospace;
         font-size: 0.75rem;
     }
     #context-panel::before {
-        content: "APEX  /  PIT WALL";
+        content: "PIT WALL";
         display: block;
         position: sticky;
         top: 0;
         z-index: 3;
         margin: -1.5rem -1.5rem 1rem;
-        padding: 0.8rem 1.5rem;
-        border-bottom: 3px solid #e10600;
-        background: linear-gradient(115deg, #19191e 0%, #19191e 80%, #e10600 80%, #e10600 83%, #19191e 83%);
-        color: #fff;
-        font: italic 800 0.8rem system-ui, sans-serif;
-        letter-spacing: 0.12em;
+        padding: 1.5rem;
+        border-bottom: 1px solid #dedee2;
+        background: #f7f7f7;
+        color: #19191e;
+        font: 750 0.85rem system-ui, sans-serif;
+        letter-spacing: 0.05em;
     }
     #context-panel:empty::after {
         content: "Your research team’s activity will appear here when a run starts.";
@@ -57,15 +57,14 @@ contextStyle.textContent = `
     /* Columns share the width, down to 16rem each; only then does the panel scroll sideways */
     .ctx-grid { display: grid; grid-template-columns: repeat(var(--ctx-cols, 1), minmax(16rem, 1fr)); column-gap: 1rem; }
     .ctx-head {
-        position: sticky; top: 2.45rem; z-index: 1;
-        background: #f3f3f5;
+        position: sticky; top: 4.1rem; z-index: 1;
+        background: #f7f7f7;
         padding: 1rem 0.65rem 0.65rem;
-        border-top: 4px solid #bbbcc2;
+        border-top: 2px solid #dedee2;
         margin-bottom: 0.5rem;
         color: #4c4c56;
         font-weight: 750;
-        font-style: italic;
-        letter-spacing: 0.07em;
+        letter-spacing: 0.05em;
     }
     .ctx-head.active { color: #19191e; border-top-color: #e10600; }
     .ctx-wait { border-left: 2px dashed #ccc; margin-left: 1px; }

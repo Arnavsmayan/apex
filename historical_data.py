@@ -80,6 +80,50 @@ def pace(key, a, b, start_lap, end_lap):
             'method': 'Median of per-lap A minus B, on the same numbered retained laps. Negative means A was faster. Compounds and traffic may differ.',
             'source': DATASET, 'method_source': METHOD, 'limitation': LIMITATION}
 
+def season_strategy(year, driver):
+    """Summarize retained tyre observations and results across a bundled season."""
+    path = ROOT / 'data' / 'jolpica' / f'{year}_all_results.json'
+    if not path.exists():
+        return {'error': 'Season overview is available for 2018–2024 only.'}
+    races = json.loads(path.read_text(encoding='utf-8'))
+    candidates = {}
+    for race in races:
+        for result in race.get('Results', []):
+            item = result.get('Driver', {})
+            if item.get('driverId'):
+                candidates[item['driverId']] = item
+    query = driver.strip().casefold()
+    matches = [d for d in candidates.values() if query in {
+        str(d.get('code', '')).casefold(), str(d.get('driverId', '')).casefold(),
+        str(d.get('familyName', '')).casefold(),
+        (str(d.get('givenName', '')) + ' ' + str(d.get('familyName', ''))).casefold()}]
+    if len(matches) != 1:
+        return {'error': 'Driver missing or ambiguous; use a surname or three-letter code.', 'matches': [d.get('driverId') for d in matches]}
+    selected = matches[0]
+    code = selected.get('code')
+    if not code:
+        return {'error': 'This driver has no code in the bundled data.'}
+    with sqlite3.connect(DB) as db:
+        rows = db.execute('select round, stint, compound, min(lap), max(lap), count(*) from laps where season=? and driver=? group by round, stint, compound order by round, stint, compound', (year, code)).fetchall()
+    observations = {}
+    for rnd, stint, compound, first, last, count in rows:
+        observations.setdefault(rnd, []).append({'stint': stint, 'compound': compound,
+            'first_retained_lap': first, 'last_retained_lap': last, 'retained_laps': count})
+    timeline = []
+    for race in races:
+        entry = next((r for r in race.get('Results', []) if r.get('Driver', {}).get('driverId') == selected['driverId']), None)
+        if entry is None:
+            continue
+        rnd = int(race['round'])
+        timeline.append({'round': rnd, 'race': race['raceName'], 'grid': entry.get('grid'),
+                         'finish': entry.get('positionText'), 'status': entry.get('status'),
+                         'observed_tyres': observations.get(rnd, [])})
+    return {'year': year, 'driver': selected.get('givenName', '') + ' ' + selected.get('familyName', ''),
+            'driver_code': code, 'races': timeline, 'race_count': len(timeline),
+            'races_with_retained_laps': sum(bool(r['observed_tyres']) for r in timeline),
+            'sources': [DATASET, f'https://api.jolpi.ca/ergast/f1/{year}/results.json?limit=100'],
+            'note': LIMITATION + ' Tyre stints and lap ranges are only what survived filtering, not full stint boundaries or a complete pit-stop record. Some tyre changes may be missing; do not infer an exact stop count. Examine selected races with OpenF1 for a fuller picture.'}
+
 @lru_cache(maxsize=128)
 def results(key):
     race = catalog().get(str(key))
