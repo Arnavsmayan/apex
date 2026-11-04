@@ -1,6 +1,6 @@
 # Apex
 
-Apex investigates questions about Formula 1 races. A lead finds the race and assigns distinct research tasks, researchers analyze data and check accounts, and a review may request one focused follow-up before the report is written and checked. All agents use the configured Vertex AI model.
+Apex investigates questions about Formula 1 races. A lead finds the race and assigns distinct research tasks, researchers analyze data and check accounts, and a review may request one focused follow-up before the report is written. All agents use the configured Vertex AI model.
 
 ## Evidence and coverage
 

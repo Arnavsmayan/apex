@@ -260,19 +260,6 @@ Write a short report in markdown that answers the question, using only the findi
     model_settings=SETTINGS,
 )
 
-auditor = Agent(
-    name="Evidence Check",
-    instructions="""Audit the proposed report against the supplied tool-based findings. Return the complete corrected
-report, not a critique. Remove or qualify claims about causes, tire temperature, weather, team decisions, track
-position and counterfactuals unless directly supported. Check all arithmetic, lap windows and tire compounds.
-The median of paired differences is not the difference of individual medians. State the sample and laps for pace
-comparisons, avoid treating a mixed-compound interval as one stint, and retain clickable markdown citations.
-The OpenF1 paired-lap calculator does not filter flags, so remove claims that its laps were green, clean, or flying. An interval is to the car ahead, and a gap to leader is not necessarily a gap between the named drivers: remove any driver-to-driver gap unless directly established at the same time. Zero rainfall at a sensor does not prove the track was dry. If uncertain, omit a claim or state the limitation. Do not introduce new unsupported information.""",
-    model=MODEL,
-    model_settings=SETTINGS,
-)
-
-
 async def deep_research(question: str, hooks: PanelHooks) -> str:
     research_run = Research(hooks=hooks)
 
@@ -290,8 +277,7 @@ async def deep_research(question: str, hooks: PanelHooks) -> str:
     # Write using both the initial and follow-up evidence.
     findings = "\n\n---\n\n".join(research_run.findings)
     report = await Runner.run(writer, f"Question: {question}\n\nFindings:\n\n{findings}\n\nReview:\n{review.final_output}", hooks=hooks, max_turns=4)
-    checked = await Runner.run(auditor, f"Question: {question}\n\nEvidence:\n{findings}\n\nProposed report:\n{report.final_output}", hooks=hooks, max_turns=3)
-    return str(checked.final_output)
+    return str(report.final_output)
 
 
 # --- FastAPI App ---
