@@ -330,15 +330,3 @@ Following a floor upgrade in Austin, the car’s balance stabilized somewhat, bu
 3. **Driver Management over Car Superiority:** In the final third of the season, Verstappen’s tyre strategy was often "salvaged" by his individual driving inputs—backing off in high-energy corners to preserve thermal limits—rather than the car naturally taking care of the rubber.
 
 </details>
-
-## Tool parameters
-
-| Tool | What to pass | What it does |
-| --- | --- | --- |
-| `find_race` | Four-digit `year` and part of the race name, such as `2024` and `British` | Finds the race key and reports source availability. A year is needed to discover on-demand OpenF1 sessions. |
-| `get_season_strategy` | `year` from 2018–2024 and driver surname, full name, or code, such as `2024` and `VER` | Summarizes retained tyre observations and results by race. The observed ranges are not complete stint boundaries. |
-| `get_race_evidence` | OpenF1 `session_key`, one to three driver names or codes, and types such as `pit`, `stints`, `laps`, `weather`, `race_control`, or `results` | Retrieves several kinds of evidence together. |
-| `get_race_data` | OpenF1 session key, one data type, and a driver when needed; intervals require `start_lap` and `end_lap` | Retrieves one kind of race data or a short interval window. |
-| `compare_lap_pace` | OpenF1 session key, two drivers, and a lap range, such as `9558`, `HAM`, `VER`, `40`, `52` | Calculates the median of same-numbered paired lap differences, excluding pit and out laps. |
-| `get_historical_laps` / `compare_historical_pace` | Bundled race key such as `2021_22`, driver codes such as `HAM` and `VER`, and a lap range | Retrieves or compares filtered FastF1-derived laps. |
-| `get_structured_results` / `get_official_context` | A race session key returned by `find_race` | Retrieves classifications or the selected official and team summaries when available. |
